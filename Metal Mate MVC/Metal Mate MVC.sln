@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36221.1 d17.14
+# Visual Studio Version 18
+VisualStudioVersion = 18.7.11925.98 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Metal Mate MVC", "Metal Mate MVC\Metal Mate MVC.csproj", "{7E1B7C2B-4756-497B-BAE3-D3D1498AC136}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Metal Mate MVC.Tests", "Metal Mate MVC.Tests\Metal Mate MVC.Tests.csproj", "{DD3FF59B-2520-4506-9620-A5E84C1EF404}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{7E1B7C2B-4756-497B-BAE3-D3D1498AC136}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E1B7C2B-4756-497B-BAE3-D3D1498AC136}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E1B7C2B-4756-497B-BAE3-D3D1498AC136}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD3FF59B-2520-4506-9620-A5E84C1EF404}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD3FF59B-2520-4506-9620-A5E84C1EF404}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD3FF59B-2520-4506-9620-A5E84C1EF404}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD3FF59B-2520-4506-9620-A5E84C1EF404}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

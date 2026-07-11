@@ -14,3 +14,12 @@ The aim of this project is to build a website using an MVC C# project in Visual 
   
   Send me an alert if the silver price in USD is > 3,000.
   
+## Features
+- Uses the Gold Price API at https://www.metals-api.com/ to retrieve the current metal prices. Error handling ensures that exceptions are sent on failure of the call and transient errors are retried 3 times before a final exception is returned.
+
+## Testing
+### API Testing
+- The call to the API is tested using XUnit tests to ensure it is functioning correctly.
+- The tests include both Unit (with mocked responses) and Integration tests (with the real API).
+- The tests include both positive and negative test cases and also that the retry logic is functioning correctly.
+
