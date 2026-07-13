@@ -4,7 +4,7 @@ using Metal_Mate_MVC.Exceptions;
 
 namespace Metal_Mate_MVC.Tests.Integration.Services
 {
-    public class APIServiceIntegrationTests
+    public class ApiServiceIntegrationTests
     {
         [Fact]
         public async Task GetSpotPriceAsync_ValidResponse_ReturnsSpotPrice_FromRealAPI()
@@ -14,7 +14,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Services
             var client = new HttpClient();
             client.BaseAddress = new Uri("https://api.gold-api.com/");
 
-            var service = new APIService(client);
+            var service = new ApiService(client);
 
             //Act
             var result = await service.GetSpotPriceAsync("XAU", "USD");
@@ -33,7 +33,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Services
             var client = new HttpClient();
             client.BaseAddress = new Uri("https://api.gold-api.com/");
 
-            var service = new APIService(client);
+            var service = new ApiService(client);
 
             // Act & Assert
             await Assert.ThrowsAsync<ApiClientErrorException>(() =>

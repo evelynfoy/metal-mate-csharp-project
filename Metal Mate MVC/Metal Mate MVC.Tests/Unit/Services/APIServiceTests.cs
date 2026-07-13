@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Metal_Mate_MVC.Tests
 {
-    public class APIServiceTests
+    public class ApiServiceTests
     {
         // Mocked response - happy path
         [Fact]
@@ -40,7 +40,7 @@ namespace Metal_Mate_MVC.Tests
             var httpClient = new HttpClient(handlerMock.Object);
             httpClient.BaseAddress = new Uri("https://api.gold-api.com/");
 
-            var service = new APIService(httpClient);
+            var service = new ApiService(httpClient);
 
             // Act
             var result = await service.GetSpotPriceAsync("XAU","USD");
@@ -78,7 +78,7 @@ namespace Metal_Mate_MVC.Tests
             var httpClient = new HttpClient(handlerMock.Object);
             httpClient.BaseAddress = new Uri("https://api.gold-api.com/");
 
-            var service = new APIService(httpClient);
+            var service = new ApiService(httpClient);
 
             // Act and Assert
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -107,7 +107,7 @@ namespace Metal_Mate_MVC.Tests
             var httpClient = new HttpClient(handlerMock.Object);
             httpClient.BaseAddress = new Uri("https://api.gold-api.com/");
 
-            var service = new APIService(httpClient);
+            var service = new ApiService(httpClient);
 
             // Act and Assert
             await Assert.ThrowsAsync<ApiClientErrorException>(() =>
@@ -137,7 +137,7 @@ namespace Metal_Mate_MVC.Tests
             var httpClient = new HttpClient(handlerMock.Object);
             httpClient.BaseAddress = new Uri("https://api.gold-api.com/");
 
-            var service = new APIService(httpClient);
+            var service = new ApiService(httpClient);
 
             // Act and Assert
             var ex = await Assert.ThrowsAsync<Exception>(() =>

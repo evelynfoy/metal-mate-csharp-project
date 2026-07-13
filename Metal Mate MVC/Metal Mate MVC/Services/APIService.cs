@@ -4,16 +4,16 @@ using Metal_Mate_MVC.Exceptions;
 
 namespace Metal_Mate_MVC.Services;
 
-public interface IAPIService
+public interface IApiService
 {
     Task<SpotPrice?> GetSpotPriceAsync(string symbol, string currencyCode);
 }
 
-public class APIService : IAPIService
+public class ApiService : IApiService
 {
     private readonly HttpClient _httpClient;
 
-    public APIService(HttpClient httpClient)
+    public ApiService(HttpClient httpClient)
     {
         _httpClient = httpClient;
     }
