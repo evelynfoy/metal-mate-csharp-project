@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Metal_Mate_MVC.Models;
+using Metal_Mate_MVC.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Metal_Mate_MVC.Controllers
@@ -7,14 +8,24 @@ namespace Metal_Mate_MVC.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IApiService _apiService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IApiService apiService)
         {
             _logger = logger;
+            _apiService = apiService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            try
+            {
+                var spotPrice = await _apiService.GetSpotPriceAsync("XAU", "USD");
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = ex.Message;
+            }
             return View();
         }
 
