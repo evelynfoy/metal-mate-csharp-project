@@ -1,20 +1,62 @@
-﻿@{
+﻿@model HomeViewModel
+
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container text-center">
+
+    @if (Model?.SpotPrice != null)
+    {
+        <div class="row">
+            <div class="column mb-4 mt-5">
+                <h2>Check out the latest metal prices.</h2>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center mt-4">
+            <dl class="mb-0">
+
+                <div class="d-flex align-items-center mb-3">
+                    <dt class="fw-semibold me-3 fs-4">
+                        @Html.DisplayNameFor(m => m.SpotPrice!.Price):
+                    </dt>
+                    <dd class="mb-0 fs-3">
+                        <span id="currencySymbol">
+                            @Html.DisplayFor(m => m.SpotPrice!.CurrencySymbol)
+                        </span>
+                        <span id="spotPrice" class="fw-bold">
+                            @Html.DisplayFor(m => m.SpotPrice!.Price)
+                        </span>
+                    </dd>
+                </div>
+
+                <div class="d-flex align-items-center mb-3">
+                    <dt class="fw-semibold me-3 fs-4">
+                        @Html.DisplayNameFor(m => m.SpotPrice!.ExchangeRate):
+                    </dt>
+                    <dd class="mb-0 fs-5">
+                        @Html.DisplayFor(m => m.SpotPrice!.ExchangeRate)
+                    </dd>
+                </div>
+
+                <div class="d-flex align-items-center mb-5">
+                    <dt class="fw-semibold me-3 fs-4">
+                        @Html.DisplayNameFor(m => m.SpotPrice!.UpdatedAt):
+                    </dt>
+                    <dd class="mb-0 fs-5">
+                        @Html.DisplayFor(m => m.SpotPrice!.UpdatedAt)
+                    </dd>
+                </div>
+
+            </dl>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model?.ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            @Model.ErrorMessage
+        </div>
+    }
 </div>
-
-@if (ViewBag.ErrorMessage != null)
-{
-    <div class="alert alert-danger">
-        @ViewBag.ErrorMessage
-    </div>
-}
-
-@if (Model != null)
-{
-    <p>Gold Price: @Model.Price</p>
-}

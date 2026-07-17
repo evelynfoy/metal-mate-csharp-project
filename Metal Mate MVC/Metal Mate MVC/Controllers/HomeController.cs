@@ -18,15 +18,22 @@ namespace Metal_Mate_MVC.Controllers
 
         public async Task<IActionResult> Index()
         {
+            var model = new HomeViewModel
+            {
+                SpotPrice = null,
+                ErrorMessage = null
+            };
+
             try
             {
                 var spotPrice = await _apiService.GetSpotPriceAsync("XAU", "USD");
+                model.SpotPrice = spotPrice;
             }
             catch (Exception ex)
             {
-                ViewBag.ErrorMessage = ex.Message;
+                model.ErrorMessage = ex.Message;
             }
-            return View();
+            return View(model);
         }
 
         public IActionResult Privacy()
