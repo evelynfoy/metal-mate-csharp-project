@@ -26,7 +26,7 @@ namespace Metal_Mate_MVC.Controllers
 
             try
             {
-                var spotPrice = await _apiService.GetSpotPriceAsync("XAU", "USD");
+                var spotPrice = await _apiService.GetAPIDataAsync<SpotPrice>("price/XAU/USD");
                 model.SpotPrice = spotPrice;
             }
             catch (Exception ex)

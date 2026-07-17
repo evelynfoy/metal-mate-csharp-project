@@ -1,14 +1,9 @@
-﻿using Metal_Mate_MVC;
-using Metal_Mate_MVC.Controllers;
-using Metal_Mate_MVC.Exceptions;
+﻿using Metal_Mate_MVC.Controllers;
 using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Moq.Protected;
-using System.Net;
-using System.Text;
 
 namespace Metal_Mate_MVC.Tests
 {
@@ -35,7 +30,7 @@ namespace Metal_Mate_MVC.Tests
         {
             // Arrange
             _apiServiceMock
-                .Setup(s => s.GetSpotPriceAsync("XAU", "USD"))
+                .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/XAU/USD"))
                 .ReturnsAsync(new SpotPrice
                 {
                     Name = "Gold",
@@ -55,7 +50,7 @@ namespace Metal_Mate_MVC.Tests
             var viewResult = Assert.IsType<ViewResult>(result);
             var model = Assert.IsType<HomeViewModel>(viewResult.Model);
             Assert.NotNull(model.SpotPrice);
-            Assert.Equal("Gold", model.SpotPrice.Name );
+            Assert.Equal("Gold", model.SpotPrice.Name);
         }
 
         // Mocked response - Exception thrown from the service
@@ -64,7 +59,7 @@ namespace Metal_Mate_MVC.Tests
         {
             // Arrange
             _apiServiceMock
-                .Setup(s => s.GetSpotPriceAsync("XAU", "USD"))
+                .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/XAU/USD"))
                 .ThrowsAsync(new Exception("An error ocurred"));
 
             // Act

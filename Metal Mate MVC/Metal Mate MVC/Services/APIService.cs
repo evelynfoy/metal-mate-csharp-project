@@ -1,12 +1,11 @@
 ﻿
-using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Exceptions;
 
 namespace Metal_Mate_MVC.Services;
 
 public interface IApiService
 {
-    Task<SpotPrice?> GetSpotPriceAsync(string symbol, string currencyCode);
+    Task<T?> GetAPIDataAsync<T>(string url) where T : class;
 }
 
 public class ApiService : IApiService
@@ -19,10 +18,13 @@ public class ApiService : IApiService
     }
 
     /*
-        Calls the Gold Price API to get the spot price of a metal in a specific currency.
+        Calls the API endpoint passed to the method to get either 
+            1) the list of valid metals or
+            2) the spot price of a metal in a specific currency 
         Implements retry logic for transient errors (network issues, server errors).
+        Uses a generic type parameter T to allow for different return types (e.g., List<Metal> or SpotPrice).
     */
-    public async Task<SpotPrice?> GetSpotPriceAsync(string symbol, string currencyCode)
+    public async Task<T?> GetAPIDataAsync<T>(string url) where T : class
     {
         const int maxRetries = 3;
         var delay = TimeSpan.FromSeconds(2);
@@ -32,15 +34,15 @@ public class ApiService : IApiService
         {
             try
             {
-                var response = await _httpClient.GetAsync($"price/{symbol}/{currencyCode}");
+                var response = await _httpClient.GetAsync(url);
                 if (response.IsSuccessStatusCode)
                 {
-                    var price = await response.Content.ReadFromJsonAsync<SpotPrice>();
-                    if (price is null)
+                    var result = await response.Content.ReadFromJsonAsync<T>();
+                    if (result is null)
                     {
                         throw new InvalidOperationException("The API returned an empty response.");
                     }
-                    return price;
+                    return result;
                 }
 
                 // Don't retry for client errors (400-499)

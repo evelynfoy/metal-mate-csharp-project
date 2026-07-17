@@ -1,5 +1,4 @@
 using Metal_Mate_MVC.Data;
-using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +17,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddHttpClient<IApiService, ApiService>(client =>
 {
-    client.BaseAddress = new Uri("https://api.gold-api.co/");
+    client.BaseAddress = new Uri("https://api.gold-api.com/");
 });
 
 var app = builder.Build();
