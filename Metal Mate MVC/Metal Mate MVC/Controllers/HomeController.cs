@@ -21,11 +21,14 @@ namespace Metal_Mate_MVC.Controllers
             var model = new HomeViewModel
             {
                 SpotPrice = null,
+                metals = null,
                 ErrorMessage = null
             };
 
             try
             {
+                var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
+                model.metals = metals;
                 var spotPrice = await _apiService.GetAPIDataAsync<SpotPrice>("price/XAU/USD");
                 model.SpotPrice = spotPrice;
             }
