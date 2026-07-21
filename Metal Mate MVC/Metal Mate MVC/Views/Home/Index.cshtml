@@ -24,6 +24,14 @@
                     data-url="@Url.Action("GetSpotPrice", "Home")">
             </select>
 
+            <label asp-for="SelectedCurrency" class="form-label mb-0 fw-semibold fs-4"></label>
+
+            <select asp-for="SelectedCurrency"
+                    asp-items="Model.Currencies"
+                    class="form-select w-auto"
+                    data-url="@Url.Action("GetSpotPrice", "Home")">
+            </select>
+
         </div>
 
         <div class="d-flex justify-content-center mt-4">

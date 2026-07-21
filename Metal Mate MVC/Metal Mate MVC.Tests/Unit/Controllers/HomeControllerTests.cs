@@ -129,7 +129,7 @@ namespace Metal_Mate_MVC.Tests
              });
 
             // Act
-            var result = await _controller.GetSpotPriceAsync("XAU");
+            var result = await _controller.GetSpotPriceAsync("XAU","EUR");
 
             // Assert
             var json = Assert.IsType<JsonResult>(result);
@@ -157,7 +157,7 @@ namespace Metal_Mate_MVC.Tests
                 .ThrowsAsync(new Exception("An error ocurred"));
 
             // Act
-            var result = await _controller.GetSpotPriceAsync("XAU");
+            var result = await _controller.GetSpotPriceAsync("XAU", "EUR");
 
             // Assert
             var objectResult = Assert.IsType<ObjectResult>(result);

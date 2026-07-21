@@ -1,8 +1,9 @@
-﻿// Updates the spot price information based on change of the selected metal
+﻿// Updates the spot price information based on change of either the selected metal or currency.
 
 document.addEventListener("DOMContentLoaded", () => {
 
     const selectedMetal = document.getElementById("SelectedMetal");
+    const selectedCurrency = document.getElementById("SelectedCurrency");
     const spotPrice = document.getElementById("spotPrice");
     const exchangeRate = document.getElementById("exchangeRate");
     const currencySymbol = document.getElementById("currencySymbol");
@@ -12,13 +13,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const url = selectedMetal.dataset.url;
 
     selectedMetal.addEventListener("change", loadSpotPrice);
+    selectedCurrency.addEventListener("change", loadSpotPrice);
 
     async function loadSpotPrice() {
 
         try {
-
             const response = await fetch(
-                `${url}?metal=${encodeURIComponent(selectedMetal.value)}`
+                `${url}?metal=${encodeURIComponent(selectedMetal.value)}&currency=${encodeURIComponent(selectedCurrency.value)}`
             );
 
             if (!response.ok) {

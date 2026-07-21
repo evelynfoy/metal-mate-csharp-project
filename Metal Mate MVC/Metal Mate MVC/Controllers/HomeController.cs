@@ -29,11 +29,21 @@ namespace Metal_Mate_MVC.Controllers
                 SpotPrice = null,
                 Metals = null,
                 SelectedMetal = null,
+                Currencies = null,
+                SelectedCurrency = null,
                 ErrorMessage = null
             };
 
             try
             {
+                string[] currencies = ["EUR", "AUD", "BRL", "CAD", "CHF", "CNY", "DKK", "GBP", "HKD", "INR", "JPY", "KRW", "MXN", "NOK", "NZD", "SEK", "SGD", "USD", "ZAR"];
+                model.Currencies = currencies.Select(c => new SelectListItem
+                {
+                    Value = c,
+                    Text = c
+                });
+                model.SelectedCurrency = "EUR";
+
                 var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
                 model.Metals = metals.Select(x => new SelectListItem
                 {
@@ -41,6 +51,7 @@ namespace Metal_Mate_MVC.Controllers
                     Text = x.Name.ToString()
                 });
                 model.SelectedMetal = "XAU";
+
                 var spotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{model.SelectedMetal}/USD");
                 model.SpotPrice = spotPrice;
             }
@@ -68,11 +79,11 @@ namespace Metal_Mate_MVC.Controllers
          * new selection. 
          */
         [HttpGet]
-        public async Task<IActionResult> GetSpotPriceAsync(string metal)
+        public async Task<IActionResult> GetSpotPriceAsync(string metal, string currency)
         {
             try
             {
-                var spotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{metal}/EUR");
+                var spotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{metal}/{currency}");
 
                 return Json(new SpotPriceResponse
                 {
