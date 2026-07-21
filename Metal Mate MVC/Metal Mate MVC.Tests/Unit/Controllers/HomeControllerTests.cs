@@ -1,13 +1,13 @@
-﻿using Metal_Mate_MVC.Controllers;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+
+using Moq;
+
+using Metal_Mate_MVC.Controllers;
+using Metal_Mate_MVC.DTOs;
 using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Services;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Logging;
-using Moq;
-using System.Net;
-using System.Net.Http.Json;
-using System.Text.Json.Nodes;
 
 namespace Metal_Mate_MVC.Tests
 {
@@ -53,10 +53,10 @@ namespace Metal_Mate_MVC.Tests
             _apiServiceMock
              .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
              .ReturnsAsync(new List<Metal>
-               {
-                   new Metal { Name = "Silver", Symbol = "XAG" },
-                   new Metal { Name = "Gold", Symbol = "XAU" }
-               });
+             {
+                 new Metal { Name = "Silver", Symbol = "XAG" },
+                 new Metal { Name = "Gold", Symbol = "XAU" }
+             });
 
             // Act
             var result = await _controller.Index();
@@ -66,8 +66,8 @@ namespace Metal_Mate_MVC.Tests
             var model = Assert.IsType<HomeViewModel>(viewResult.Model);
             Assert.NotNull(model.SpotPrice);
             Assert.Equal("Gold", model.SpotPrice.Name);
-            Assert.NotNull(model.metals);
-            Assert.Equal("Gold", model.metals[1].Name);
+            Assert.NotNull(model.Metals);
+            Assert.Equal("Gold", model.Metals.ElementAt(1).Text);
         }
 
         // Mocked response - Exception thrown from the service
@@ -76,12 +76,12 @@ namespace Metal_Mate_MVC.Tests
         {
             // Arrange
 
-            // Mock the API service to return a valid SpotPrice object
+            // Mock the API service to return an exception when trying to get the SpotPrice
             _apiServiceMock
                 .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/XAU/USD"))
                 .ThrowsAsync(new Exception("An error ocurred"));
 
-            // Mock the API service to return a valid list of metals
+            // Mock the API service to return an exception when trying to get the list of metals
             _apiServiceMock
                 .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
                 .ThrowsAsync(new Exception("An error ocurred"));
@@ -94,8 +94,83 @@ namespace Metal_Mate_MVC.Tests
             var model = Assert.IsType<HomeViewModel>(viewResult.Model);
 
             Assert.Null(model.SpotPrice);
-            Assert.Null(model.metals);
-            Assert.Equal("An error ocurred", model.ErrorMessage);
+            Assert.Null(model.Metals);
+            Assert.Equal("The price site is unavailable at the moment. Please try again later.", model.ErrorMessage);
+        }
+
+        // Mocked response - Happy path for the GetSpotPriceAsync Method 
+        [Fact]
+        public async Task GetSpotPriceAsync_ReturnsOkWithSpotPrice()
+        {
+            // Arrange
+
+            // Mock the API service to return a valid SpotPrice object
+            _apiServiceMock
+                .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/XAU/EUR"))
+                .ReturnsAsync(new SpotPrice
+                {
+                    Name = "Gold",
+                    UpdatedAtReadable = "a few minutes ago",
+                    UpdatedAt = DateTime.UtcNow,
+                    CurrencySymbol = "$",
+                    ExchangeRate = 1.00f,
+                    Symbol = "XAU",
+                    Currency = "USD",
+                    Price = 3500.00f
+                });
+
+            // Mock the API service to return a valid list of metals
+            _apiServiceMock
+             .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
+             .ReturnsAsync(new List<Metal>
+             {
+                 new Metal { Name = "Silver", Symbol = "XAG" },
+                 new Metal { Name = "Gold", Symbol = "XAU" }
+             });
+
+            // Act
+            var result = await _controller.GetSpotPriceAsync("XAU");
+
+            // Assert
+            var json = Assert.IsType<JsonResult>(result);
+            var response = Assert.IsType<SpotPriceResponse>(json.Value);
+            Assert.NotNull(response);
+            Assert.Equal(3500.00f,response.Price);
+            Assert.Equal("$", response.CurrencySymbol);
+
+        }
+
+        // Mocked response - Exception thrown from the service while calling the GetSpotPriceAsync Method       
+        [Fact]
+        public async Task GetSpotPriceAsync_ReturnsInternalServerError()
+        {
+            // Arrange
+
+            // Mock the API service to return an exception when trying to get the SpotPrice
+            _apiServiceMock
+                .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/XAU/USD"))
+                .ThrowsAsync(new Exception("An error ocurred"));
+
+            // Mock the API service to return an exception when trying to get the list of metals
+            _apiServiceMock
+                .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
+                .ThrowsAsync(new Exception("An error ocurred"));
+
+            // Act
+            var result = await _controller.GetSpotPriceAsync("XAU");
+
+            // Assert
+            var objectResult = Assert.IsType<ObjectResult>(result);
+            Assert.NotNull(objectResult.Value);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+
+            var message = objectResult.Value
+                .GetType()
+                .GetProperty("message")?
+                .GetValue(objectResult.Value); 
+
+            Assert.Equal("The price site is unavailable at the moment. Please try again later.", message);
+
         }
     }
 }

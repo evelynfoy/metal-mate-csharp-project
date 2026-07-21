@@ -5,7 +5,7 @@ namespace Metal_Mate_MVC.Services;
 
 public interface IApiService
 {
-    Task<T?> GetAPIDataAsync<T>(string url) where T : class;
+    Task<T> GetAPIDataAsync<T>(string url) where T : class;
 }
 
 public class ApiService : IApiService
@@ -24,7 +24,7 @@ public class ApiService : IApiService
         Implements retry logic for transient errors (network issues, server errors).
         Uses a generic type parameter T to allow for different return types (e.g., List<Metal> or SpotPrice).
     */
-    public async Task<T?> GetAPIDataAsync<T>(string url) where T : class
+    public async Task<T> GetAPIDataAsync<T>(string url) where T : class
     {
         const int maxRetries = 3;
         var delay = TimeSpan.FromSeconds(2);

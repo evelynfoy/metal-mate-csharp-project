@@ -1,7 +1,13 @@
 using System.Diagnostics;
+
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis;
+
 using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Services;
-using Microsoft.AspNetCore.Mvc;
+using Metal_Mate_MVC.DTOs;
+
 
 namespace Metal_Mate_MVC.Controllers
 {
@@ -21,20 +27,27 @@ namespace Metal_Mate_MVC.Controllers
             var model = new HomeViewModel
             {
                 SpotPrice = null,
-                metals = null,
+                Metals = null,
+                SelectedMetal = null,
                 ErrorMessage = null
             };
 
             try
             {
                 var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
-                model.metals = metals;
-                var spotPrice = await _apiService.GetAPIDataAsync<SpotPrice>("price/XAU/USD");
+                model.Metals = metals.Select(x => new SelectListItem
+                {
+                    Value = x.Symbol.ToString(),
+                    Text = x.Name.ToString()
+                });
+                model.SelectedMetal = "XAU";
+                var spotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{model.SelectedMetal}/USD");
                 model.SpotPrice = spotPrice;
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                _logger.LogError(ex, "An error occurred while fetching data from the API." + ex.Message);    
+                model.ErrorMessage = "The price site is unavailable at the moment. Please try again later.";
             }
             return View(model);
         }
@@ -48,6 +61,32 @@ namespace Metal_Mate_MVC.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        /* 
+         * Called from JavaScript on change of the metal selection dropdown and calls the API passing in the 
+         * new selection. 
+         */
+        [HttpGet]
+        public async Task<IActionResult> GetSpotPriceAsync(string metal)
+        {
+            try
+            {
+                var spotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{metal}/EUR");
+
+                return Json(new SpotPriceResponse
+                {
+                    Price = spotPrice.Price,
+                    ExchangeRate = spotPrice.ExchangeRate,
+                    CurrencySymbol = spotPrice.CurrencySymbol,
+                    UpdatedAt = spotPrice.UpdatedAt.ToString("dd/MM/yyyy HH:mm:ss")
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching the spot price from the API.");
+                return StatusCode(500, new { message = "The price site is unavailable at the moment. Please try again later." });
+            }
         }
     }
 }
