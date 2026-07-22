@@ -9,11 +9,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const currencySymbol = document.getElementById("currencySymbol");
     const updatedAt = document.getElementById("updatedAt");
     const errorMessage = document.getElementById("errorMessage");
+    const updateButton = document.getElementById("updateButton");
 
     const url = selectedMetal.dataset.url;
 
     selectedMetal.addEventListener("change", loadSpotPrice);
     selectedCurrency.addEventListener("change", loadSpotPrice);
+    updateButton.addEventListener("click", loadSpotPrice);
 
     async function loadSpotPrice() {
 

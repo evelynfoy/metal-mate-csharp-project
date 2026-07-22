@@ -8,12 +8,14 @@
 
     @if (Model?.SpotPrice != null)
     {
+        <!-- Heading Area -->
         <div class="row">
             <div class="column mb-4 mt-5">
                 <h2>Check out the latest metal prices.</h2>
             </div>
         </div>
 
+        <!-- Selections Area -->
         <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
 
             <label asp-for="SelectedMetal" class="form-label mb-0 fw-semibold fs-4"></label>
@@ -34,6 +36,7 @@
 
         </div>
 
+        <!-- Price Details Area -->
         <div class="d-flex justify-content-center mt-4">
             <dl class="mb-0">
 
@@ -71,8 +74,18 @@
 
             </dl>
         </div>
+
+        <!-- Button Area -->
+        <div class="d-flex justify-content-center mt-4 mb-4">
+            <button id="updateButton"
+                    type="button"
+                    class="btn btn-secondary">
+                Update Price
+            </button>
+        </div>
     }
 
+    <!-- Error Area -->
     @if (!string.IsNullOrEmpty(Model?.ErrorMessage))
     {
         <div id="errorMessage" class="alert alert-danger">
