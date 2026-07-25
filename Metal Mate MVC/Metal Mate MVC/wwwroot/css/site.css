@@ -4,31 +4,75 @@
     --silver: #C4C4C4;
     --dark-grey: #24211E;
     --white: #FFF;
+    --copper: #893727
 }
 
 html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    font-size: 14px;
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-body {
-  margin-bottom: 60px;
+main {
+    flex: 1;
 }
 
 .bg-gold {
     background-color: var(--gold);
+}
+
+.border-top {
+    border-top-color: var(--gold) !important;
+}
+
+.link {
+    color: var(--dark-grey);
+}
+
+  /* med copper */
+a:hover {
+    color: var(--copper);
+}
+
+h1 {
+    font-size: 24px;
+    padding: 0 0 15px 0;
+    border-bottom: solid 1px #e9ba2b;
+    margin-top: 1rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.default-price-box {
+    border: 1px solid var(--dark-grey);
+    border-radius: 10px;
+    text-align: center;
+    padding: 5px;
+}
+
+.btn-gold {
+    background-color: var(--gold);
+    color: var(--dark-grey);
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+
+    .grid {
+        grid-template-columns: repeat(3,1fr);
+    }
 }
