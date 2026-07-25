@@ -32,18 +32,18 @@
                     </div>
 
                     <!-- Defaulted Prices Area -->
-                    <div class="mt-5 grid fw-bold">
+                    <div class="mt-5 grid fw-bold" >
                         <div class="default-price-box">
                             <span>Gold</span>
-                            <span>€@Html.DisplayFor(m => m.SpotPrice!.Price):</span>
+                            <span id="goldSpotPrice">€@Html.DisplayFor(m => m.SpotPrice!.Price):</span>
                         </div>
-                        <div class ="default-price-box">
+                        <div class="default-price-box" >
                             <span>Silver</span>
-                            <span>€@Html.DisplayFor(m => m.SilverSpotPrice!.Price)</span>
+                            <span id="silverSpotPrice">€@Html.DisplayFor(m => m.SilverSpotPrice!.Price)</span>
                         </div>
                         <div class="default-price-box">
                             <span>Platinum</span>
-                            <span>€@Html.DisplayFor(m => m.PlatinumSpotPrice!.Price)</span>
+                            <span id="platinumSpotPrice">€@Html.DisplayFor(m => m.PlatinumSpotPrice!.Price)</span>
                         </div>
                     </div>
 

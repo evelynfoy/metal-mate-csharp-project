@@ -36,7 +36,7 @@ namespace Metal_Mate_MVC.Tests
             // Arrange
             // Mock the API service to return a valid SpotPrice object
             _apiServiceMock
-                .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/XAU/USD"))
+                .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/XAU/EUR"))
                 .ReturnsAsync(new SpotPrice
                 {
                     Name = "Gold",
@@ -45,7 +45,7 @@ namespace Metal_Mate_MVC.Tests
                     CurrencySymbol = "$",
                     ExchangeRate = 1.00f,
                     Symbol = "XAU",
-                    Currency = "USD",
+                    Currency = "EUR",
                     Price = 3500.00f
                 });
 

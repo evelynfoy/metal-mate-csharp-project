@@ -8,5 +8,7 @@ namespace Metal_Mate_MVC.DTOs
         public float ExchangeRate { get; init; }
         public string CurrencySymbol { get; init; } = string.Empty;
         public string UpdatedAt { get; init; } = string.Empty;
+        public float SilverPrice { get; init; }
+        public float PlatinumPrice { get; init; }
     }
 }
