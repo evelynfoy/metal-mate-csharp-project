@@ -26,6 +26,8 @@ namespace Metal_Mate_MVC.Controllers
         {
             var model = new HomeViewModel
             {
+                SilverSpotPrice = null,
+                PlatinumSpotPrice = null,
                 SpotPrice = null,
                 Metals = null,
                 SelectedMetal = null,
@@ -52,8 +54,16 @@ namespace Metal_Mate_MVC.Controllers
                 });
                 model.SelectedMetal = "XAU";
 
-                var spotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{model.SelectedMetal}/USD");
+                var spotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{model.SelectedMetal}/{model.SelectedCurrency}");
                 model.SpotPrice = spotPrice;
+
+                var silver = "XAG";
+                var silverSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{silver}/{model.SelectedCurrency}");
+                model.SilverSpotPrice = silverSpotPrice;
+
+                var platinum = "XPT";
+                var platinumSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{platinum}/{model.SelectedCurrency}");
+                model.PlatinumSpotPrice = platinumSpotPrice;
             }
             catch (Exception ex)
             {

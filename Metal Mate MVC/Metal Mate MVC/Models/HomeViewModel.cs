@@ -11,6 +11,9 @@ namespace Metal_Mate_MVC.Models
 {
     public class HomeViewModel
     {
+        public SpotPrice? SilverSpotPrice { get; set; }
+        public SpotPrice? PlatinumSpotPrice { get; set; }
+
         public SpotPrice? SpotPrice { get; set; }
 
         [Display(Name = "Metal")]
