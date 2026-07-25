@@ -1,3 +1,11 @@
+/* Global Variables */
+:root {
+    --gold: #D4AF37;
+    --silver: #C4C4C4;
+    --dark-grey: #24211E;
+    --white: #FFF;
+}
+
 html {
   font-size: 14px;
 }
@@ -19,4 +27,8 @@ html {
 
 body {
   margin-bottom: 60px;
+}
+
+.bg-gold {
+    background-color: var(--gold);
 }
