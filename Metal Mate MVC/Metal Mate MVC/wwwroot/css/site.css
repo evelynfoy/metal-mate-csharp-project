@@ -62,6 +62,10 @@ h1 {
     padding: 5px;
 }
 
+.price-area {
+    font-size : 1.5rem;
+}
+
 .btn-gold {
     background-color: var(--gold);
     color: var(--dark-grey);
