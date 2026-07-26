@@ -1,4 +1,5 @@
 ﻿// Updates the spot price information based on change of either the selected metal or currency.
+// Also updates the details displayed every minute automatically.
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -13,8 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const goldSpotPrice = document.getElementById("goldSpotPrice");
     const silverSpotPrice = document.getElementById("silverSpotPrice");
     const platinumSpotPrice = document.getElementById("platinumSpotPrice");
-
-
 
     const url = selectedMetal.dataset.url;
 
