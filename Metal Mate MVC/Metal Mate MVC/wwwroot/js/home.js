@@ -92,7 +92,8 @@ document.addEventListener("DOMContentLoaded", () => {
             hideError();
         }
         catch (error) {
-            showError(error.message);
+            console.log(error.message);
+            showError("Error occurred while retrieving the prices. Please wait, it will re-try.");
         }
         finally {
             loading = false;
