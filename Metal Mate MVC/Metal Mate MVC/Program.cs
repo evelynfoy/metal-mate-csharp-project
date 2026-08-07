@@ -1,9 +1,7 @@
-
-using Microsoft.EntityFrameworkCore;
-
 using Metal_Mate_MVC.Data;
-using Metal_Mate_MVC.Services;
 using Metal_Mate_MVC.Models;
+using Metal_Mate_MVC.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,3 +47,7 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 app.Run();
+
+public partial class Program
+{
+}
