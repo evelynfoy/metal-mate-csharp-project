@@ -60,7 +60,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Services
         }
 
         [Fact]
-        public async Task GetAPIAsync_ThrowsException_FromRealSymbolsAPI()
+        public async Task GetAPIDataAsync_ThrowsException_FromRealSymbolsAPI()
         {
             // Calls the real API - invalid path to test error handling 
 

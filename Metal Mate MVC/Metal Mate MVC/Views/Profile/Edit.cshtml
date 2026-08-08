@@ -1,0 +1,89 @@
+﻿@model EditProfileViewModel
+
+@{
+    ViewData["Title"] = "Edit Profile";
+}
+
+<!-- Breadcrumb column -->
+<div>
+    <a class="link" href="/">Home</a>> User Profile
+</div>
+
+<!-- Heading Area -->
+<header class="row mb-3 mt-3">
+    <h1>Edit Profile</h1>
+</header>
+
+<!-- Display form only if metals and currency lists are populated 
+     and user profile has been retrieved without error                 -->
+@if (Model?.Metals != null || 
+     Model?.Currencies != null || 
+     string.IsNullOrEmpty(Model?.ErrorMessage))
+{
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    <form asp-action="Edit" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="mb-3">
+            <label asp-for="FirstName" class="form-label"></label>
+            <input asp-for="FirstName" class="form-control" />
+            <span asp-validation-for="FirstName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="LastName" class="form-label"></label>
+            <input asp-for="LastName" class="form-control" />
+            <span asp-validation-for="LastName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="FavouriteCurrency" class="form-label"></label>
+
+            <select asp-for="FavouriteCurrency"
+                    asp-items="Model?.Currencies"
+                    class="form-select w-auto">
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="FavouriteMetal" class="form-label"></label>
+
+            <select asp-for="FavouriteMetal"
+                    asp-items="Model?.Metals"
+                    class="form-select w-auto">
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Save Changes
+        </button>
+
+        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+            Cancel
+        </a>
+
+    </form>
+}
+
+<!-- Error Area -->
+@if (!string.IsNullOrEmpty(Model?.ErrorMessage))
+{
+    <div id="errorMessage" class="alert alert-danger">
+        @Model.ErrorMessage
+    </div>
+}
+else
+{
+    <div id="errorMessage" class="alert alert-danger d-none"></div>
+}
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+}
