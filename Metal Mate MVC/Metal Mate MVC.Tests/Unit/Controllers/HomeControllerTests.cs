@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using System.Security.Claims;
 
@@ -24,8 +25,7 @@ namespace Metal_Mate_MVC.Tests
         public HomeControllerTests()
         {
             _loggerMock = new Mock<ILogger<HomeController>>();
-            _userManagerMock = new Mock<UserManager<ApplicationUser>>(
-                               Mock.Of<IUserStore<ApplicationUser>>(), null, null, null, null, null, null, null, null);
+            _userManagerMock = CreateUserManagerMock();
             _apiServiceMock = new Mock<IApiService>();
 
             _controller = new HomeController(
@@ -318,5 +318,22 @@ namespace Metal_Mate_MVC.Tests
             Assert.Equal("The price site is unavailable at the moment. Please try again later.", message);
 
         }
+
+        // Helper method to create a mock UserManager
+        private static Mock<UserManager<ApplicationUser>> CreateUserManagerMock()
+        {
+            return new Mock<UserManager<ApplicationUser>>(
+                Mock.Of<IUserStore<ApplicationUser>>(),
+                Mock.Of<IOptions<IdentityOptions>>(),
+                Mock.Of<IPasswordHasher<ApplicationUser>>(),
+                Mock.Of<IEnumerable<IUserValidator<ApplicationUser>>>(),
+                Mock.Of<IEnumerable<IPasswordValidator<ApplicationUser>>>(),
+                Mock.Of<ILookupNormalizer>(),
+                Mock.Of<IdentityErrorDescriber>(),
+                Mock.Of<IServiceProvider>(),
+                Mock.Of<ILogger<UserManager<ApplicationUser>>>());
+        }
     }
 }
+
+    
