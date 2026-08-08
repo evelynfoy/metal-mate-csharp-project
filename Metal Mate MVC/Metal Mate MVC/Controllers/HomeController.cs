@@ -1,12 +1,12 @@
-using System.Diagnostics;
-
+using Metal_Mate_MVC.DTOs;
+using Metal_Mate_MVC.Exceptions;
+using Metal_Mate_MVC.Models;
+using Metal_Mate_MVC.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.CodeAnalysis;
-
-using Metal_Mate_MVC.Models;
-using Metal_Mate_MVC.Services;
-using Metal_Mate_MVC.DTOs;
+using System.Diagnostics;
 
 
 namespace Metal_Mate_MVC.Controllers
@@ -14,11 +14,15 @@ namespace Metal_Mate_MVC.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IApiService _apiService;
 
-        public HomeController(ILogger<HomeController> logger, IApiService apiService)
+        public HomeController(ILogger<HomeController> logger,
+                              UserManager<ApplicationUser> userManager, 
+                              IApiService apiService)
         {
             _logger = logger;
+            _userManager = userManager;
             _apiService = apiService;
         }
 
@@ -54,8 +58,18 @@ namespace Metal_Mate_MVC.Controllers
                 });
                 model.SelectedMetal = "XAU";
 
+                await SetUserPreferencesAsync(model);
+
                 var spotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{model.SelectedMetal}/{model.SelectedCurrency}");
                 model.SpotPrice = spotPrice;
+                model.GoldSpotPrice = spotPrice;
+
+                if (model.SelectedMetal != "XAU")
+                {
+                    var gold = "XAU";
+                    var goldSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{gold}/{model.SelectedCurrency}");
+                    model.GoldSpotPrice = goldSpotPrice;
+                }
 
                 var silver = "XAG";
                 var silverSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{silver}/{model.SelectedCurrency}");
@@ -102,6 +116,30 @@ namespace Metal_Mate_MVC.Controllers
             {
                 _logger.LogError(ex, "An error occurred while fetching the spot price from the API.");
                 return StatusCode(500, new { message = "The price site is unavailable at the moment. Please try again later." });
+            }
+        }
+
+        private async Task SetUserPreferencesAsync(HomeViewModel model)
+        {
+            if (User?.Identity?.IsAuthenticated != true)
+                return;
+
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+
+                if (user is null)
+                    throw new UserProfileErrorException("User profile not found.");
+
+                model.SelectedMetal = user.FavouriteMetal;
+                model.SelectedCurrency = user.FavouriteCurrency;
+            }
+            catch (UserProfileErrorException ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching the user profile.");
+
+                model.ErrorMessage =
+                    "Apologies, your profile information is currently unavailable so your favourite selections cannot be defaulted. Please use the dropdowns above.";
             }
         }
     }

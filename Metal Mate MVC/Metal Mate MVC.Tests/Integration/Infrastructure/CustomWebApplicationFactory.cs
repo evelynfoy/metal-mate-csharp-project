@@ -48,18 +48,52 @@ namespace Metal_Mate_MVC.Tests.Integration.Infrastructure
                 apiService
                     .Setup(x => x.GetAPIDataAsync<List<Metal>>("symbols"))
                     .ReturnsAsync(new List<Metal>
+                        {
+                        new Metal
+                        {
+                            Symbol = "XAU",
+                            Name = "Gold"
+                        },
+                        new Metal
+                        {
+                            Symbol = "XAG",
+                            Name = "Silver"
+                        },
+                        new Metal
+                        {
+                            Symbol = "BTC",
+                            Name = "Bitcoin"
+                        }
+                    });
+
+                apiService
+                    .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/XAU/EUR"))
+                    .ReturnsAsync(new SpotPrice
                     {
-                    new Metal
-                    {
+                        Name = "Gold",
+                        UpdatedAtReadable = "a few minutes ago",
+                        UpdatedAt = DateTime.UtcNow,
+                        CurrencySymbol = "€",
+                        ExchangeRate = 1.00f,
                         Symbol = "XAU",
-                        Name = "Gold"
-                    },
-                    new Metal
+                        Currency = "EUR",
+                        Price = 3500.00f
+                    });
+
+                apiService
+                    .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/BTC/INR"))
+                    .ReturnsAsync(new SpotPrice
                     {
-                        Symbol = "XAG",
-                        Name = "Silver"
-                    }
-                            });
+                        Name = "Bitcoin",
+                        UpdatedAtReadable = "a few minutes ago",
+                        UpdatedAt = DateTime.UtcNow,
+                        CurrencySymbol = "₹",
+                        ExchangeRate = 95.2421f,
+                        Symbol = "BTC",
+                        Currency = "INR",
+                        Price = 6186641.00f
+                    });
+
 
                 services.AddSingleton(apiService.Object);
 
