@@ -26,8 +26,21 @@ namespace Metal_Mate_MVC.Controllers
             _apiService = apiService;
         }
 
+        /* 
+         * This action method does the following :-
+         *    1) It retrieves the list of metals supported from the API and populates the metals dropdown. 
+         *    2) It populates the currencies dropdown from an array.
+         *    3) If a user is logged in it retrieves their favourite metal and currency values and uses them to set the initial value of 
+         *       the selected metal and currency fields.
+         *    4) If the user has changed their favourites from Gold and Euro then the gold euro price needs to be retrieved as well
+         *        as the spot price for the selected metal and currency.
+         *    5) It also retrieves the silver and platinum euro prices for display in the view.
+         */
         public async Task<IActionResult> Index()
         {
+            const string gold = "XAU";
+            const string euro = "EUR";
+
             var model = new HomeViewModel
             {
                 SilverSpotPrice = null,
@@ -48,7 +61,7 @@ namespace Metal_Mate_MVC.Controllers
                     Value = c,
                     Text = c
                 });
-                model.SelectedCurrency = "EUR";
+                model.SelectedCurrency = euro;
 
                 var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
                 model.Metals = metals.Select(x => new SelectListItem
@@ -56,7 +69,7 @@ namespace Metal_Mate_MVC.Controllers
                     Value = x.Symbol.ToString(),
                     Text = x.Name.ToString()
                 });
-                model.SelectedMetal = "XAU";
+                model.SelectedMetal = gold;
 
                 await SetUserPreferencesAsync(model);
 
@@ -64,19 +77,21 @@ namespace Metal_Mate_MVC.Controllers
                 model.SpotPrice = spotPrice;
                 model.GoldSpotPrice = spotPrice;
 
-                if (model.SelectedMetal != "XAU")
+                // Gold Euro price 
+                if (model.SelectedMetal != gold || model.SelectedCurrency != euro)
                 {
-                    var gold = "XAU";
-                    var goldSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{gold}/{model.SelectedCurrency}");
+                    var goldSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{gold}/{euro}");
                     model.GoldSpotPrice = goldSpotPrice;
                 }
 
-                var silver = "XAG";
-                var silverSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{silver}/{model.SelectedCurrency}");
+                // Silver Euro price 
+                const string silver = "XAG";
+                var silverSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{silver}/{euro}");
                 model.SilverSpotPrice = silverSpotPrice;
 
-                var platinum = "XPT";
-                var platinumSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{platinum}/{model.SelectedCurrency}");
+                // Platinum Euro price 
+                const string platinum = "XPT";
+                var platinumSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{platinum}/{euro}");
                 model.PlatinumSpotPrice = platinumSpotPrice;
             }
             catch (Exception ex)
@@ -95,7 +110,7 @@ namespace Metal_Mate_MVC.Controllers
 
         /* 
          * Called from JavaScript on change of the metal selection dropdown and calls the API passing in the 
-         * new selection. 
+         * new selection. It is also called on a timer to update the spot price every minute and on click of the refresh price button. 
          */
         [HttpGet]
         public async Task<IActionResult> GetSpotPriceAsync(string metal, string currency)
