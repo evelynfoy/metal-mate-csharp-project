@@ -1,0 +1,84 @@
+﻿@model Metal_Mate_MVC.Models.ViewModels.AlertRequestIndexViewModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<!-- Breadcrumb column -->
+<div>
+    <a class="link" href="/">Home</a>> My Alert Requests
+</div>
+
+<!-- Heading Area -->
+<header class="row mb-3 mt-3">
+    <h1>My Alert Requests</h1>
+</header>
+
+<!-- Alert Requests Area - display if list not empty and no error message -->
+@if (string.IsNullOrEmpty(Model?.ErrorMessage))
+{
+    <p>
+        <a asp-action="Create">Create New</a>
+    </p>
+
+   <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.AlertRequests.First().Metal)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.AlertRequests.First().Currency)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.AlertRequests.First().Operator)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.AlertRequests.First().Value)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.AlertRequests.First().IsEnabled)
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model!.AlertRequests)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Metal)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Currency)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Operator)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Value)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.IsEnabled)
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<!-- Error Area -->
+@if (!string.IsNullOrEmpty(Model?.ErrorMessage))
+{
+    <div id="errorMessage" class="alert alert-danger">
+        @Model.ErrorMessage
+    </div>
+}
+else
+{
+    <div id="errorMessage" class="alert alert-danger d-none"></div>
+}

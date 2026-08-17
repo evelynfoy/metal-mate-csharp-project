@@ -1,4 +1,5 @@
 ﻿using Metal_Mate_MVC.Models;
+using Metal_Mate_MVC.Models.ViewModels;
 using Metal_Mate_MVC.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

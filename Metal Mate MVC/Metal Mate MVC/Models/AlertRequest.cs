@@ -1,11 +1,6 @@
 ﻿namespace Metal_Mate_MVC.Models
 {
-    public enum ComparisonOperator
-    {
-        LessThan,
-        GreaterThan,
-    }
-
+    
     public class AlertRequest
     {
         public int Id { get; set; }
@@ -20,5 +15,11 @@
 
         // Navigation property
         public ApplicationUser User { get; set; } = null!;
+    }
+
+    public enum ComparisonOperator
+    {
+        LessThan,
+        GreaterThan,
     }
 }
