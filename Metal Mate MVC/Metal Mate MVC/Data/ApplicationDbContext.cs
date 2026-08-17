@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Metal_Mate_MVC.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-
-using Metal_Mate_MVC.Models;
-
 
 namespace Metal_Mate_MVC.Data
 {
@@ -11,6 +9,20 @@ namespace Metal_Mate_MVC.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
+        }
+
+        public DbSet<AlertRequest> AlertRequests { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            // Important: let Identity configure its tables first
+            base.OnModelCreating(builder);
+
+            builder.Entity<AlertRequest>()
+                .HasOne(p => p.User)
+                .WithMany(u => u.AlertRequests)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
