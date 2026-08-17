@@ -1,4 +1,4 @@
-namespace Metal_Mate_MVC.Models
+namespace Metal_Mate_MVC.Models.ViewModels
 {
     public class ErrorViewModel
     {

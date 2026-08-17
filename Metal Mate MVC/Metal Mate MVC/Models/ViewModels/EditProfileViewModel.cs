@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
-namespace Metal_Mate_MVC.Models
+namespace Metal_Mate_MVC.Models.ViewModels
 {
     public class EditProfileViewModel
     {
