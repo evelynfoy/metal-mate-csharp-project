@@ -72,7 +72,7 @@ public sealed class SetUpTestDB : IAsyncDisposable
         };
     }
 
-    private static AlertRequest CreateUserAlertRequest(ApplicationUser user)
+    public static AlertRequest CreateUserAlertRequest(ApplicationUser user)
     {
         return new AlertRequest
         {

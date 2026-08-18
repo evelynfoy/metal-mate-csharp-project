@@ -1,12 +1,14 @@
 using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Services;
+using Microsoft.EntityFrameworkCore;
+using Moq;
 
 namespace Metal_Mate_MVC.Tests
 {
     public class AlertRequestServiceTests
     {
 
-        // Mocked response - happy path - Checks only alert requests for the specified user are returned
+        // In-memory Database - happy path - Checks only alert requests for the specified user are returned
         [Fact]
         public async Task GetForUserAsync_ValidResponse_ReturnsOnlyRequestsForSpecifiedUser()
         {
@@ -41,6 +43,8 @@ namespace Metal_Mate_MVC.Tests
 
         }
 
+        // In-memory Database - happy path - Checks empty list is returned if no requests exist
+        // for the specified user
         [Fact]
         public async Task GetForUserAsync_ValidResponse_ReturnsEmptyListForSpecifiedUser()
         {
@@ -65,5 +69,35 @@ namespace Metal_Mate_MVC.Tests
             Assert.Empty(requests);
 
         }
+
+        // In-memory Database - happy path - Save changes
+        [Fact]
+        public async Task AddAsync_ValidResponse_ReturnsValidResult()
+        {
+
+            // Arrange
+            // Create an in-memory SQLite database with two users and two alert requests for the first user and one for the second user
+            // The boolean parameter tells the method to create the alert requests for the first user.
+            await using var testDb =
+                await SetUpTestDB.CreateAsync(TestContext.Current.CancellationToken, true);
+
+            var context = testDb.Context;
+
+            var service = new AlertRequestService(context);
+            var user = context.Users.First();
+            var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
+
+            // Act
+            await service.AddAsync(alertRequest);
+
+            // Assert
+            var result = await context.AlertRequests
+                .SingleOrDefaultAsync(x => x.Id == alertRequest.Id,
+                TestContext.Current.CancellationToken);
+
+            Assert.NotNull(result);
+
+        }
+
     }
 }

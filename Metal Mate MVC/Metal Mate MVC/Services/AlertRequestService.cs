@@ -7,6 +7,7 @@ namespace Metal_Mate_MVC.Services
     public interface IAlertRequestService
     {
         Task<List<AlertRequest>> GetForUserAsync(string userId);
+        Task AddAsync(AlertRequest alertRequest);
     }
 
     public class AlertRequestService : IAlertRequestService
@@ -24,6 +25,12 @@ namespace Metal_Mate_MVC.Services
                     .Include(a => a.User)
                     .Where(ar => ar.UserId == userId)
                     .ToListAsync();
+        }
+
+        public async Task AddAsync(AlertRequest alertRequest)
+        {
+            _context.Add(alertRequest);
+            await _context.SaveChangesAsync();
         }
     }
 }
