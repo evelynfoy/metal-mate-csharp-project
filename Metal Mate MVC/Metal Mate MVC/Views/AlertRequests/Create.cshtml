@@ -14,28 +14,18 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Metal" class="control-label"></label>
-                <input asp-for="Metal" class="form-control" />
-                <span asp-validation-for="Metal" class="text-danger"></span>
-            </div>
-@*             <div class="mb-3">
-                <label asp-for="Metal" class="form-label"></label>
-
                 <select asp-for="Metal"
                         asp-items="Model?.Metals"
-                        class="form-select w-auto">
+                        class="form-select">
                 </select>
+                <span asp-validation-for="Metal" class="text-danger"></span>
             </div>
-            <div class="mb-3">
-                <label asp-for="Currency" class="form-label"></label>
-
-                <select asp-for="Currency"
-                        asp-items="Model?.Currencies"
-                        class="form-select w-auto">
-                </select>
-            </div> *@
             <div class="form-group">
                 <label asp-for="Currency" class="control-label"></label>
-                <input asp-for="Currency" class="form-control" />
+                <select asp-for="Currency" 
+                        asp-items="Model?.Currencies" 
+                        class="form-select">
+                </select>
                 <span asp-validation-for="Currency" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -48,7 +38,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="Value" class="control-label"></label>
-                <input asp-for="Value" class="form-control" />
+                <input asp-for="Value" class="form-control" type="number" min="1" step="1" />
                 <span asp-validation-for="Value" class="text-danger"></span>
             </div>
             <div class="form-group form-check">
@@ -56,12 +46,24 @@
                     <input class="form-check-input" asp-for="IsEnabled" /> @Html.DisplayNameFor(model => model.IsEnabled)
                 </label>
             </div>
-            <div class="form-group">
+            <div class="form-group mt-3 mb-3">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
         </form>
     </div>
 </div>
+
+<!-- Error Area -->
+@if (!string.IsNullOrEmpty(Model?.ErrorMessage))
+{
+    <div id="errorMessage" class="alert alert-danger">
+        @Model.ErrorMessage
+    </div>
+}
+else
+{
+    <div id="errorMessage" class="alert alert-danger d-none"></div>
+}
 
 <div>
     <a asp-action="Index">Back to List</a>

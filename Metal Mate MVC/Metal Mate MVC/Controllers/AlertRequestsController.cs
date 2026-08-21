@@ -17,16 +17,19 @@ namespace Metal_Mate_MVC.Controllers
         private readonly ILogger<AlertRequestsController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IAlertRequestService _alertRequestService;
+        private readonly IApiService _apiService;
 
         public AlertRequestsController(ApplicationDbContext context,
                                        ILogger<AlertRequestsController> logger,
                                        UserManager<ApplicationUser> userManager,
-                                       IAlertRequestService alertRequestService)
+                                       IAlertRequestService alertRequestService,
+                                       IApiService apiService)
         {
             _context = context;
             _logger = logger;
             _userManager = userManager;
             _alertRequestService = alertRequestService;
+            _apiService = apiService;
         }
 
         // GET: AlertRequests
@@ -79,17 +82,33 @@ namespace Metal_Mate_MVC.Controllers
         }
 
         // GET: AlertRequests/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            var model = new AlertRequest
+            var model = new AlertRequestViewModel();
+
+            try
             {
-                Metal = string.Empty, 
-                Currency = string.Empty,
-                Operator = ComparisonOperator.GreaterThan,
-                Value = 0,
-                IsEnabled = true 
-            };
-            return View();
+                var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
+                model.Metals = metals.Select(x => new SelectListItem
+                {
+                    Value = x.Symbol.ToString(),
+                    Text = x.Name.ToString()
+                });
+                string[] currencies = ["EUR", "AUD", "BRL", "CAD", "CHF", "CNY", "DKK", "GBP", "HKD", "INR", "JPY", "KRW", 
+                    "MXN", "NOK", "NZD", "SEK", "SGD", "USD", "ZAR"];
+                model.Currencies = currencies.Select(c => new SelectListItem
+                {
+                    Value = c,
+                    Text = c
+                });
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError(ex, "An error occurred while fetching data for the page." + ex.Message);
+                model.ErrorMessage = "There was a problem retrieving the informationfor this page. Please try again later.";
+            }
+
+            return View(model);
         }
 
         // POST: AlertRequests/Create
@@ -102,44 +121,47 @@ namespace Metal_Mate_MVC.Controllers
                 return View(model);
             }
 
-            var user = await _userManager.GetUserAsync(User);
-
-            if (user == null)
+            try
             {
-                return Unauthorized();
-            }
+                var user = await _userManager.GetUserAsync(User);
 
-            var alertRequest = new AlertRequest
-            {
-                Metal = model.Metal,
-                Currency = model.Currency,
-                Operator = model.Operator,
-                Value = model.Value,
-                IsEnabled = model.IsEnabled,
-                UserId = user.Id
-            };
-
-            alertRequest.UserId = user.Id;
-            alertRequest.User = user;
-
-            foreach (var modelState in ModelState)
-            {
-                foreach (var error in modelState.Value.Errors)
+                if (user == null)
                 {
-                    Console.WriteLine($"{modelState.Key}: {error.ErrorMessage}");
+                    _logger.LogError("The user is null. User: {UserName}", User.Identity?.Name);
+                    model.ErrorMessage = "There was a problem saving this entry. Please try again.";
+                    return View(model);
+                }
+
+                var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
+
+                var alertRequest = new AlertRequest
+                {
+                    Metal = model.Metal,
+                    Currency = model.Currency,
+                    Operator = model.Operator,
+                    Value = model.Value,
+                    IsEnabled = model.IsEnabled,
+                    UserId = user.Id
+                };
+
+                alertRequest.UserId = user.Id;
+                alertRequest.User = user;
+
+                ModelState.Remove(nameof(alertRequest.UserId));
+                ModelState.Remove(nameof(alertRequest.User));
+
+                if (ModelState.IsValid)
+                {
+                    await _alertRequestService.AddAsync(alertRequest);
+                    return RedirectToAction(nameof(Index));
                 }
             }
-
-            ModelState.Remove(nameof(alertRequest.UserId));
-            ModelState.Remove(nameof(alertRequest.User));
-
-            if (ModelState.IsValid)
+            catch (Exception ex)
             {
-                _context.Add(alertRequest);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                _logger.LogError(ex, "An error occurred while saving the alert request.");
+                model.ErrorMessage = "Your alert request did not save successfully. Please try again later.";
             }
-            return View(alertRequest);
+            return View(model);
         }
 
         // GET: AlertRequests/Edit/5
