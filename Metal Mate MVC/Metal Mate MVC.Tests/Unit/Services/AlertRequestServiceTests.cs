@@ -99,5 +99,67 @@ namespace Metal_Mate_MVC.Tests
 
         }
 
+        // In-memory Database - happy path - Save changes
+        [Fact]
+        public async Task SaveAsync_ValidResponse_ReturnsValidResult()
+        {
+
+            // Arrange
+            // Create an in-memory SQLite database with two users and two alert requests for the first user and one for the second user
+            // The boolean parameter tells the method to create the alert requests for the first user.
+            await using var testDb =
+                await SetUpTestDB.CreateAsync(TestContext.Current.CancellationToken, true);
+
+            var context = testDb.Context;
+
+            var service = new AlertRequestService(context);
+            var user = context.Users.First();
+            var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
+            await service.AddAsync(alertRequest);
+            alertRequest.Metal = "XAG"; //Silver
+
+
+            // Act
+            await service.SaveAsync(alertRequest);
+
+            // Assert
+            var result = await context.AlertRequests
+                .SingleOrDefaultAsync(x => x.Id == alertRequest.Id,
+                TestContext.Current.CancellationToken);
+
+            Assert.NotNull(result);
+            Assert.Equal(alertRequest.Metal, result.Metal);
+
+        }
+
+        // In-memory Database - happy path - Get alert request by id.
+        [Fact]
+        public async Task GetByIdAsync_ValidResponse_ReturnsValidResult()
+        {
+
+            // Arrange
+            // Create an in-memory SQLite database with two users and two alert requests for the first user and one for the second user
+            // The boolean parameter tells the method to create the alert requests for the first user.
+            await using var testDb =
+                await SetUpTestDB.CreateAsync(TestContext.Current.CancellationToken, true);
+
+            var context = testDb.Context;
+
+            var service = new AlertRequestService(context);
+            var user = context.Users.First();
+
+            // Act
+            var alertRequestRetrieved = await service.GetByIdAsync(1);
+
+            // Assert
+
+            Assert.NotNull(alertRequestRetrieved);
+            Assert.Equal(context.AlertRequests.First().Id, alertRequestRetrieved.Id);
+            Assert.Equal(context.AlertRequests.First().Metal, alertRequestRetrieved.Metal);
+            Assert.Equal(context.AlertRequests.First().Currency, alertRequestRetrieved.Currency);
+            Assert.Equal(context.AlertRequests.First().Value, alertRequestRetrieved.Value);
+
+        }
+
     }
 }

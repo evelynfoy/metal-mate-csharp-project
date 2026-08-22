@@ -8,6 +8,8 @@ namespace Metal_Mate_MVC.Services
     {
         Task<List<AlertRequest>> GetForUserAsync(string userId);
         Task AddAsync(AlertRequest alertRequest);
+        Task SaveAsync(AlertRequest alertRequest);
+        Task<AlertRequest?> GetByIdAsync(int id);
     }
 
     public class AlertRequestService : IAlertRequestService
@@ -32,5 +34,17 @@ namespace Metal_Mate_MVC.Services
             _context.Add(alertRequest);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<AlertRequest?> GetByIdAsync(int id)
+        {
+            return await _context.AlertRequests.FindAsync(id);
+        }
+
+        public async Task SaveAsync(AlertRequest alertRequest)
+        {
+            _context.Update(alertRequest);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }
