@@ -1,4 +1,4 @@
-﻿using Metal_Mate_MVC.Data;
+using Metal_Mate_MVC.Data;
 using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -167,52 +167,114 @@ namespace Metal_Mate_MVC.Controllers
         // GET: AlertRequests/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            var model = new AlertRequestViewModel();
+
             if (id == null)
             {
-                return NotFound();
+                _logger.LogError("The id is null. Id: {id}", id);
+                model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                return View(model);
             }
 
-            var alertRequest = await _context.AlertRequests.FindAsync(id);
-            if (alertRequest == null)
+            try
             {
-                return NotFound();
+                var user = await _userManager.GetUserAsync(User);
+
+                if (user == null)
+                {
+                    _logger.LogError("The user is null. User: {UserName}", User.Identity?.Name);
+                    model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                    return View(model);
+                }
+
+                var alertRequest = await _alertRequestService.GetByIdAsync(id.Value);
+                if (alertRequest == null)
+                {
+                    _logger.LogError("The alert request is null. Request: {id}", id);
+                    model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                    return View(model);
+                }
+
+                model.Id = alertRequest.Id;
+                model.Currency = alertRequest.Currency;
+                model.Metal = alertRequest.Metal;
+                model.Value = alertRequest.Value;
+                model.Operator = alertRequest.Operator;
+                model.IsEnabled = alertRequest.IsEnabled;
+
+                var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
+                model.Metals = metals.Select(x => new SelectListItem
+                {
+                    Value = x.Symbol.ToString(),
+                    Text = x.Name.ToString()
+                });
+                string[] currencies = ["EUR", "AUD", "BRL", "CAD", "CHF", "CNY", "DKK", "GBP", "HKD", "INR", "JPY", "KRW",
+                    "MXN", "NOK", "NZD", "SEK", "SGD", "USD", "ZAR"];
+                model.Currencies = currencies.Select(c => new SelectListItem
+                {
+                    Value = c,
+                    Text = c
+                });
+
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", alertRequest.UserId);
-            return View(alertRequest);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching data for the page." + ex.Message);
+                model.ErrorMessage = "There was a problem retrieving the information for this page. Please try again later.";
+            }
+
+            return View(model);
+
         }
 
         // POST: AlertRequests/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Metal,Currency,Operator,Value,IsEnabled,UserId")] AlertRequest alertRequest)
+        public async Task<IActionResult> Edit(int id, AlertRequestViewModel model)
         {
-            if (id != alertRequest.Id)
+            if (id != model.Id)
             {
-                return NotFound();
+                _logger.LogError("The id does not match the model id. Id: {id} Model Id: {model.Id}.", id, User.Identity?.Name);
+                model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                return View(model);
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
+                return View(model);
+            }
+
+            try
+            {
+                var alertRequest = new AlertRequest();
+                alertRequest.Id = id;
+                alertRequest.Value = model.Value;
+                alertRequest.Operator = model.Operator;
+                alertRequest.Currency = model.Currency;
+                alertRequest.Metal = model.Metal;
+                alertRequest.IsEnabled = model.IsEnabled;
+                var user = await _userManager.GetUserAsync(User);
+
+                if (user == null)
                 {
-                    _context.Update(alertRequest);
-                    await _context.SaveChangesAsync();
+                    _logger.LogError("The user is null. User: {UserName}", User.Identity?.Name);
+                    model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                    return View(model);
                 }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!AlertRequestExists(alertRequest.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                alertRequest.User = user;
+                alertRequest.UserId = user.Id;
+                await _alertRequestService.SaveAsync(alertRequest);
+
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", alertRequest.UserId);
-            return View(alertRequest);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while saving the data for the page." + ex.Message);
+                model.ErrorMessage = "There was a problem saving the information for this page. Please try again later.";
+            }
+
+            
+            return View(model);
         }
 
         // GET: AlertRequests/Delete/5
