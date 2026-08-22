@@ -66,7 +66,6 @@ namespace Metal_Mate_MVC.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             var model = new AlertRequestViewModel();
-            id = null;
             if (id == null)
             {
                 _logger.LogError("The id is null. Id: {id}", id);
@@ -315,20 +314,55 @@ namespace Metal_Mate_MVC.Controllers
         // GET: AlertRequests/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+            var model = new AlertRequestViewModel();
             if (id == null)
             {
-                return NotFound();
+                _logger.LogError("The id is null. Id: {id}", id);
+                model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                return View(model);
             }
-
-            var alertRequest = await _context.AlertRequests
-                .Include(a => a.User)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (alertRequest == null)
+            try
             {
-                return NotFound();
+                var user = await _userManager.GetUserAsync(User);
+
+                if (user == null)
+                {
+                    _logger.LogError("The user is null. User: {UserName}", User.Identity?.Name);
+                    model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                    return View(model);
+                }
+
+                var alertRequest = await _alertRequestService.GetByIdAsync(id.Value);
+                if (alertRequest == null)
+                {
+                    _logger.LogError("The alert request is null. Request: {id}", id);
+                    model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                    return View(model);
+                }
+
+                model.Id = alertRequest.Id;
+                model.Currency = alertRequest.Currency;
+                model.Metal = alertRequest.Metal;
+                model.Value = alertRequest.Value;
+                model.Operator = alertRequest.Operator;
+                model.IsEnabled = alertRequest.IsEnabled;
+
+                if (alertRequest == null)
+                {
+                    _logger.LogError("The alert request is null. Request: {id}", id);
+                    model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                    return View(model);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching data for the page." + ex.Message);
+                model.ErrorMessage = "There was a problem retrieving the information for this page. Please try again later.";
             }
 
-            return View(alertRequest);
+            return View(model);
+
         }
 
         // POST: AlertRequests/Delete/5
@@ -336,14 +370,24 @@ namespace Metal_Mate_MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var alertRequest = await _context.AlertRequests.FindAsync(id);
-            if (alertRequest != null)
+            var model = new AlertRequestViewModel();
+            try
             {
-                _context.AlertRequests.Remove(alertRequest);
+                if (!await _alertRequestService.DeleteAsync(id))
+                {
+                    _logger.LogError("The delete failed for Request: {id}", id);
+                    model.ErrorMessage = "There was a problem deleting this entry. Please try again.";
+                    return View(model);
+                }
+                return RedirectToAction(nameof(Index));
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting data for the page.");
+                model.ErrorMessage = "There was a problem deleting this entry. Please try again later.";
+            }
+            return View(model);
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
         }
 
         private bool AlertRequestExists(int id)

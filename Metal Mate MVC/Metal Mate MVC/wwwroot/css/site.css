@@ -5,6 +5,7 @@
     --dark-grey: #24211E;
     --white: #FFF;
     --copper: #893727;
+    --red: #8B2635;
 }
 
 html {
@@ -89,6 +90,16 @@ h1 {
     background-color: var(--gold);
     border-color: var(--copper);
     color: var(--dark-grey);
+}
+
+.btn-danger,
+.btn-danger:hover,
+.btn-danger:active,
+.btn-danger:focus,
+.btn-danger:disabled {
+    background-color: var(--red);
+    border-color: var(--dark-grey);
+    color: var(--white);
 }
 
 @media (min-width: 768px) {

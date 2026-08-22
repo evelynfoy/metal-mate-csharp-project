@@ -1124,8 +1124,319 @@ namespace Metal_Mate_MVC.Tests
 
         }
 
-        //---------------------------------------------------------------------------------------------------------------
-        //---------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------
+// Delete Tests
+//---------------------------------------------------------------------------------------------------------------
+
+
+        // Delete - Get - Mocked response from services - happy path - Displays selected alert request
+        [Fact]
+        public async Task Delete_Get_ReturnsPopulatedAlertRequestView()
+        {
+            // Arrange
+            var user = new ApplicationUser
+            {
+                Id = "user1"
+            };
+
+            _userManagerMock
+                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync(user);
+
+            var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
+            alertRequest.Id = 1;
+
+            _alertRequestServiceMock
+                .Setup(s => s.GetByIdAsync(1))
+                .ReturnsAsync(alertRequest);
+
+            // Act
+            var result = await _controller.Delete(alertRequest.Id);
+
+            // Assert
+            Assert.NotNull(result);
+            var viewResult = Assert.IsType<ViewResult>(result);
+
+            var model = Assert.IsType<AlertRequestViewModel>(
+                viewResult.Model);
+
+            Assert.Equal(1, model.Id);
+            Assert.NotNull(model.Metals);
+            Assert.NotNull(model.Currencies);
+            Assert.Equal(alertRequest.Metal, model.Metal);
+            Assert.Equal(alertRequest.Operator, model.Operator);
+            Assert.Equal(alertRequest.Value, model.Value);
+            Assert.Equal(alertRequest.IsEnabled, model.IsEnabled);
+
+            Assert.Empty(model.ErrorMessage);
+
+            _userManagerMock.Verify(
+                 s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()),
+                 Times.Once);
+
+            _alertRequestServiceMock.Verify(
+                s => s.GetByIdAsync(alertRequest.Id),
+                Times.Once);
+
+        }
+
+        // Delete - Get - Mocked response from services - null user - Displays model showing error
+        [Fact]
+        public async Task Delete_Get_NullUser_ReturnsModelViewWithError()
+        {
+            // Arrange
+            var user = new ApplicationUser
+            {
+                Id = "user1"
+            };
+
+            _userManagerMock
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync((ApplicationUser?)null);
+
+            var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
+            alertRequest.Id = 1;
+
+            _alertRequestServiceMock
+                .Setup(s => s.GetByIdAsync(1))
+                .ReturnsAsync(alertRequest);
+
+            // Act
+            var result = await _controller.Delete(alertRequest.Id);
+
+            // Assert
+            Assert.NotNull(result);
+            var viewResult = Assert.IsType<ViewResult>(result);
+
+            var model = Assert.IsType<AlertRequestViewModel>(
+                viewResult.Model);
+
+            Assert.Equal("There was a problem loading this entry. Please try again.", model.ErrorMessage);
+
+            _userManagerMock.Verify(
+                 s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()),
+                 Times.Once);
+
+            _loggerMock.Verify(
+                s => s.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                    Times.Once);
+
+        }
+
+        // Delete - Get - Mocked response from services - null id - Displays model showing error
+        [Fact]
+        public async Task Delete_Get_NullId_ReturnsModelViewWithError()
+        {
+            // Arrange
+            int? id = null;
+
+            // Act
+            var result = await _controller.Delete(id);
+
+            // Assert
+            Assert.NotNull(result);
+            var viewResult = Assert.IsType<ViewResult>(result);
+
+            var model = Assert.IsType<AlertRequestViewModel>(
+                viewResult.Model);
+
+            Assert.Equal("There was a problem loading this entry. Please try again.", model.ErrorMessage);
+
+            _loggerMock.Verify(
+                s => s.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                    Times.Once);
+        }
+
+        // Delete - Get - Mocked response from services - Exception - Displays model showing error
+        [Fact]
+        public async Task Delete_Get_Exception_ReturnsModelViewWithError()
+        {
+            // Arrange
+            var user = new ApplicationUser
+            {
+                Id = "user1"
+            };
+
+            _userManagerMock
+                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync(user);
+
+            _apiServiceMock
+                 .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
+                 .ReturnsAsync(new List<Metal>
+                 {
+                     new Metal { Name = "Silver", Symbol = "XAG" },
+                     new Metal { Name = "Gold", Symbol = "XAU" }
+                 });
+
+
+            var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
+            alertRequest.Id = 1;
+
+            _alertRequestServiceMock
+                .Setup(s => s.GetByIdAsync(1))
+                .ThrowsAsync(new Exception("The service failed to retrieve the alert request."));
+
+            // Act
+            var result = await _controller.Delete(alertRequest.Id);
+
+            // Assert
+            Assert.NotNull(result);
+            var viewResult = Assert.IsType<ViewResult>(result);
+
+            var model = Assert.IsType<AlertRequestViewModel>(
+                viewResult.Model);
+
+            Assert.Equal(0, model.Id);
+            Assert.Equal("There was a problem retrieving the information for this page. Please try again later.", model.ErrorMessage);
+
+            _userManagerMock.Verify(
+                 s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()),
+                 Times.Once);
+
+            _alertRequestServiceMock.Verify(
+                s => s.GetByIdAsync(alertRequest.Id),
+                Times.Once);
+
+            _loggerMock.Verify(
+                s => s.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.Is<Exception>(ex => ex.Message == "The service failed to retrieve the alert request."),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+
+        }
+
+        // Delete - Get - Mocked response from services - null alert request - Displays model showing error
+        [Fact]
+        public async Task Delete_Get_NullAlertRequest_ReturnsModelViewWithError()
+        {
+            // Arrange
+            var user = new ApplicationUser
+            {
+                Id = "user1"
+            };
+
+            _userManagerMock
+                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync(user);
+
+            _apiServiceMock
+                 .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
+                 .ReturnsAsync(new List<Metal>
+                 {
+                     new Metal { Name = "Silver", Symbol = "XAG" },
+                     new Metal { Name = "Gold", Symbol = "XAU" }
+                 });
+
+            _alertRequestServiceMock
+                .Setup(s => s.GetByIdAsync(1))
+                .ReturnsAsync((AlertRequest?)null);
+
+
+            // Act
+            var result = await _controller.Delete(1);
+
+            // Assert
+            Assert.NotNull(result);
+            var viewResult = Assert.IsType<ViewResult>(result);
+
+            var model = Assert.IsType<AlertRequestViewModel>(
+                viewResult.Model);
+
+            Assert.Equal(0, model.Id);
+            Assert.Equal("There was a problem loading this entry. Please try again.", model.ErrorMessage);
+
+            _loggerMock.Verify(
+            s => s.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        }
+
+//---------------------------------------------------------------------------------------------------------------
+// Delete Post Tests
+//---------------------------------------------------------------------------------------------------------------
+
+        // Delete Confirmed - Mocked response from services - happy path - Deletes changed alert request
+        [Fact]
+        public async Task DeleteConfirmed_ReturnsRedirectToIndex()
+        {
+            // Arrange
+            _alertRequestServiceMock
+                .Setup(x => x.DeleteAsync(It.IsAny<int>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.DeleteConfirmed(1);
+
+            // Assert
+            Assert.NotNull(result);
+            var redirect = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal(nameof(AlertRequestsController.Index), redirect.ActionName);
+
+
+            _alertRequestServiceMock.Verify(
+                x => x.DeleteAsync(It.IsAny<int>()),
+                Times.Once);
+
+        }
+
+        // Delete Confirmed - Mocked response from services - Exception - Displays model showing error
+        [Fact]
+        public async Task DeleteConfirmed_Exception_ReturnsModelViewWithError()
+        {
+            // Arrange
+            _alertRequestServiceMock
+                .Setup(x => x.DeleteAsync(It.IsAny<int>()))
+                .ThrowsAsync(new Exception("The service failed to delete the alert request."));
+
+            // Act
+            var result = await _controller.DeleteConfirmed(1);
+
+            // Assert
+            Assert.NotNull(result);
+            var viewResult = Assert.IsType<ViewResult>(result);
+
+            var model = Assert.IsType<AlertRequestViewModel>(
+                viewResult.Model);
+
+            Assert.Equal("There was a problem deleting this entry. Please try again later.", model.ErrorMessage);
+
+            _alertRequestServiceMock.Verify(
+                x => x.DeleteAsync(It.IsAny<int>()),
+                Times.Once);
+
+            _loggerMock.Verify(
+                s => s.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.Is<Exception>(ex => ex.Message == "The service failed to delete the alert request."),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+
+        }
+
+
+//---------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------
 
 
 

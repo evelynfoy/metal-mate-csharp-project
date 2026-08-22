@@ -180,9 +180,11 @@ namespace Metal_Mate_MVC.Tests
 
 
             // Act
-            await service.DeleteAsync(alertRequest);
+            var isDeleted = await service.DeleteAsync(alertRequest.Id);
 
             // Assert
+            Assert.True(isDeleted);
+
             var result = await context.AlertRequests
                 .SingleOrDefaultAsync(x => x.Id == alertRequest.Id,
                 TestContext.Current.CancellationToken);
