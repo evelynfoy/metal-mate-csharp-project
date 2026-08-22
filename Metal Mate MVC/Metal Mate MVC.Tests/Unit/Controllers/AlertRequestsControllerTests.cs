@@ -879,9 +879,254 @@ namespace Metal_Mate_MVC.Tests
 
         }
 
+//---------------------------------------------------------------------------------------------------------------
+// Details Get Tests
+//---------------------------------------------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------------------------------
+        // Details - Get - Mocked response from services - happy path - Displays selected alert request
+        [Fact]
+        public async Task Details_Get_ReturnsPopulatedAlertRequestView()
+        {
+            // Arrange
+            var user = new ApplicationUser
+            {
+                Id = "user1"
+            };
+
+            _userManagerMock
+                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync(user);
+
+            var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
+            alertRequest.Id = 1;
+
+            _alertRequestServiceMock
+                .Setup(s => s.GetByIdAsync(1))
+                .ReturnsAsync(alertRequest);
+
+            // Act
+            var result = await _controller.Details(alertRequest.Id);
+
+            // Assert
+            Assert.NotNull(result);
+            var viewResult = Assert.IsType<ViewResult>(result);
+
+            var model = Assert.IsType<AlertRequestViewModel>(
+                viewResult.Model);
+
+            Assert.Equal(1, model.Id);
+            Assert.NotNull(model.Metals);
+            Assert.NotNull(model.Currencies);
+            Assert.Equal(alertRequest.Metal, model.Metal);
+            Assert.Equal(alertRequest.Operator, model.Operator);
+            Assert.Equal(alertRequest.Value, model.Value);
+            Assert.Equal(alertRequest.IsEnabled, model.IsEnabled);
+
+            Assert.Empty(model.ErrorMessage);
+
+            _userManagerMock.Verify(
+                 s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()),
+                 Times.Once);
+
+            _alertRequestServiceMock.Verify(
+                s => s.GetByIdAsync(alertRequest.Id),
+                Times.Once);
+
+        }
+
+        // Details - Get - Mocked response from services - null user - Displays model showing error
+        [Fact]
+        public async Task Details_Get_NullUser_ReturnsModelViewWithError()
+        {
+            // Arrange
+            var user = new ApplicationUser
+            {
+                Id = "user1"
+            };
+
+            _userManagerMock
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync((ApplicationUser?)null);
+
+            var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
+            alertRequest.Id = 1;
+
+            _alertRequestServiceMock
+                .Setup(s => s.GetByIdAsync(1))
+                .ReturnsAsync(alertRequest);
+
+            // Act
+            var result = await _controller.Details(alertRequest.Id);
+
+            // Assert
+            Assert.NotNull(result);
+            var viewResult = Assert.IsType<ViewResult>(result);
+
+            var model = Assert.IsType<AlertRequestViewModel>(
+                viewResult.Model);
+
+            Assert.Equal("There was a problem loading this entry. Please try again.", model.ErrorMessage);
+
+            _userManagerMock.Verify(
+                 s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()),
+                 Times.Once);
+
+            _loggerMock.Verify(
+                s => s.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                    Times.Once);
+
+        }
+
+        // Details - Get - Mocked response from services - null id - Displays model showing error
+        [Fact]
+        public async Task Details_Get_NullId_ReturnsModelViewWithError()
+        {
+            // Arrange
+            int? id = null;
+
+            // Act
+            var result = await _controller.Details(id);
+
+            // Assert
+            Assert.NotNull(result);
+            var viewResult = Assert.IsType<ViewResult>(result);
+
+            var model = Assert.IsType<AlertRequestViewModel>(
+                viewResult.Model);
+
+            Assert.Equal("There was a problem loading this entry. Please try again.", model.ErrorMessage);
+
+            _loggerMock.Verify(
+                s => s.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                    Times.Once);
+        }
+
+        // Details - Get - Mocked response from services - Exception - Displays model showing error
+        [Fact]
+        public async Task Details_Get_Exception_ReturnsModelViewWithError()
+        {
+            // Arrange
+            var user = new ApplicationUser
+            {
+                Id = "user1"
+            };
+
+            _userManagerMock
+                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync(user);
+
+            _apiServiceMock
+                 .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
+                 .ReturnsAsync(new List<Metal>
+                 {
+                     new Metal { Name = "Silver", Symbol = "XAG" },
+                     new Metal { Name = "Gold", Symbol = "XAU" }
+                 });
+
+
+            var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
+            alertRequest.Id = 1;
+
+            _alertRequestServiceMock
+                .Setup(s => s.GetByIdAsync(1))
+                .ThrowsAsync(new Exception("The service failed to retrieve the alert request."));
+
+            // Act
+            var result = await _controller.Details(alertRequest.Id);
+
+            // Assert
+            Assert.NotNull(result);
+            var viewResult = Assert.IsType<ViewResult>(result);
+
+            var model = Assert.IsType<AlertRequestViewModel>(
+                viewResult.Model);
+
+            Assert.Equal(0, model.Id);
+            Assert.Equal("There was a problem retrieving the information for this page. Please try again later.", model.ErrorMessage);
+
+            _userManagerMock.Verify(
+                 s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()),
+                 Times.Once);
+
+            _alertRequestServiceMock.Verify(
+                s => s.GetByIdAsync(alertRequest.Id),
+                Times.Once);
+
+            _loggerMock.Verify(
+                s => s.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.Is<Exception>(ex => ex.Message == "The service failed to retrieve the alert request."),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+
+        }
+
+        // Details - Get - Mocked response from services - null alert request - Displays model showing error
+        [Fact]
+        public async Task Details_Get_NullAlertRequest_ReturnsModelViewWithError()
+        {
+            // Arrange
+            var user = new ApplicationUser
+            {
+                Id = "user1"
+            };
+
+            _userManagerMock
+                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync(user);
+
+            _apiServiceMock
+                 .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
+                 .ReturnsAsync(new List<Metal>
+                 {
+                     new Metal { Name = "Silver", Symbol = "XAG" },
+                     new Metal { Name = "Gold", Symbol = "XAU" }
+                 });
+
+            _alertRequestServiceMock
+                .Setup(s => s.GetByIdAsync(1))
+                .ReturnsAsync((AlertRequest?)null);
+
+
+            // Act
+            var result = await _controller.Details(1);
+
+            // Assert
+            Assert.NotNull(result);
+            var viewResult = Assert.IsType<ViewResult>(result);
+
+            var model = Assert.IsType<AlertRequestViewModel>(
+                viewResult.Model);
+
+            Assert.Equal(0, model.Id);
+            Assert.Equal("There was a problem loading this entry. Please try again.", model.ErrorMessage);
+
+            _loggerMock.Verify(
+            s => s.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+
+        }
+
+        //---------------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------------------------------------------------------------
+
 
 
         private static AlertRequestsController CreateAlertRequestController(ApplicationDbContext context,

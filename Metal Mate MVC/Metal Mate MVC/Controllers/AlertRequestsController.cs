@@ -65,20 +65,55 @@ namespace Metal_Mate_MVC.Controllers
         // GET: AlertRequests/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            var model = new AlertRequestViewModel();
+            id = null;
             if (id == null)
             {
-                return NotFound();
+                _logger.LogError("The id is null. Id: {id}", id);
+                model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                return View(model);
             }
-
-            var alertRequest = await _context.AlertRequests
-                .Include(a => a.User)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (alertRequest == null)
+            try
             {
-                return NotFound();
+                var user = await _userManager.GetUserAsync(User);
+
+                if (user == null)
+                {
+                    _logger.LogError("The user is null. User: {UserName}", User.Identity?.Name);
+                    model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                    return View(model);
+                }
+
+                var alertRequest = await _alertRequestService.GetByIdAsync(id.Value);
+                if (alertRequest == null)
+                {
+                    _logger.LogError("The alert request is null. Request: {id}", id);
+                    model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                    return View(model);
+                }
+
+                model.Id = alertRequest.Id;
+                model.Currency = alertRequest.Currency;
+                model.Metal = alertRequest.Metal;
+                model.Value = alertRequest.Value;
+                model.Operator = alertRequest.Operator;
+                model.IsEnabled = alertRequest.IsEnabled;
+
+                if (alertRequest == null)
+                {
+                    _logger.LogError("The alert request is null. Request: {id}", id);
+                    model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                    return View(model);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while fetching data for the page." + ex.Message);
+                model.ErrorMessage = "There was a problem retrieving the information for this page. Please try again later.";
             }
 
-            return View(alertRequest);
+            return View(model);
         }
 
         // GET: AlertRequests/Create
