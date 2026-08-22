@@ -10,6 +10,7 @@ namespace Metal_Mate_MVC.Services
         Task AddAsync(AlertRequest alertRequest);
         Task SaveAsync(AlertRequest alertRequest);
         Task<AlertRequest?> GetByIdAsync(int id);
+        Task DeleteAsync(AlertRequest alertRequest);
     }
 
     public class AlertRequestService : IAlertRequestService
@@ -43,6 +44,12 @@ namespace Metal_Mate_MVC.Services
         public async Task SaveAsync(AlertRequest alertRequest)
         {
             _context.Update(alertRequest);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(AlertRequest alertRequest)
+        {
+            _context.AlertRequests.Remove(alertRequest);
             await _context.SaveChangesAsync();
         }
 

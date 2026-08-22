@@ -161,5 +161,35 @@ namespace Metal_Mate_MVC.Tests
 
         }
 
+        // In-memory Database - happy path - Save changes
+        [Fact]
+        public async Task DeleteAsync_ValidResponse_ReturnsValidResult()
+        {
+
+            // Arrange
+            // Create an in-memory SQLite database with two users and two alert requests for the first user and one for the second user
+            // The boolean parameter tells the method to create the alert requests for the first user.
+            await using var testDb =
+                await SetUpTestDB.CreateAsync(TestContext.Current.CancellationToken, true);
+
+            var context = testDb.Context;
+
+            var service = new AlertRequestService(context);
+            var user = context.Users.First();
+            var alertRequest = context.AlertRequests.First();
+
+
+            // Act
+            await service.DeleteAsync(alertRequest);
+
+            // Assert
+            var result = await context.AlertRequests
+                .SingleOrDefaultAsync(x => x.Id == alertRequest.Id,
+                TestContext.Current.CancellationToken);
+
+            Assert.Null(result);
+
+        }
+
     }
 }
