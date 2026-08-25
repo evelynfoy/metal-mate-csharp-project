@@ -9,8 +9,8 @@ namespace Metal_Mate_MVC.Services
         Task<List<AlertRequest>> GetForUserAsync(string userId);
         Task AddAsync(AlertRequest alertRequest);
         Task SaveAsync(AlertRequest alertRequest);
-        Task<AlertRequest?> GetByIdAsync(int id);
-        Task<bool> DeleteAsync(int id);
+        Task<AlertRequest?> GetByIdAsync(int id, string userId);
+        Task<bool> DeleteAsync(int id, string userId);
     }
 
     public class AlertRequestService : IAlertRequestService
@@ -36,9 +36,10 @@ namespace Metal_Mate_MVC.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<AlertRequest?> GetByIdAsync(int id)
+        public async Task<AlertRequest?> GetByIdAsync(int id, string userId)
         {
-            return await _context.AlertRequests.FindAsync(id);
+            return await _context.AlertRequests
+                .FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
         }
 
         public async Task SaveAsync(AlertRequest alertRequest)
@@ -47,9 +48,10 @@ namespace Metal_Mate_MVC.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id, string userId)
         {
-            var alertRequest = await _context.AlertRequests.FindAsync(id);
+            var alertRequest = await _context.AlertRequests
+                .FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
 
             if (alertRequest == null)
             {

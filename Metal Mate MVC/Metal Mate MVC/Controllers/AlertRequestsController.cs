@@ -83,7 +83,8 @@ namespace Metal_Mate_MVC.Controllers
                     return View(model);
                 }
 
-                var alertRequest = await _alertRequestService.GetByIdAsync(id.Value);
+                var alertRequest = await _alertRequestService.GetByIdAsync(id.Value,  user.Id);
+
                 if (alertRequest == null)
                 {
                     _logger.LogError("The alert request is null. Request: {id}", id);
@@ -97,14 +98,6 @@ namespace Metal_Mate_MVC.Controllers
                 model.Value = alertRequest.Value;
                 model.Operator = alertRequest.Operator;
                 model.IsEnabled = alertRequest.IsEnabled;
-
-                if (alertRequest == null)
-                {
-                    _logger.LogError("The alert request is null. Request: {id}", id);
-                    model.ErrorMessage = "There was a problem loading this entry. Please try again.";
-                    return View(model);
-                }
-
             }
             catch (Exception ex)
             {
@@ -221,7 +214,8 @@ namespace Metal_Mate_MVC.Controllers
                     return View(model);
                 }
 
-                var alertRequest = await _alertRequestService.GetByIdAsync(id.Value);
+                var alertRequest = await _alertRequestService.GetByIdAsync(id.Value, user.Id);
+
                 if (alertRequest == null)
                 {
                     _logger.LogError("The alert request is null. Request: {id}", id);
@@ -269,7 +263,7 @@ namespace Metal_Mate_MVC.Controllers
             if (id != model.Id)
             {
                 _logger.LogError("The id does not match the model id. Id: {id} Model Id: {model.Id}.", id, User.Identity?.Name);
-                model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                model.ErrorMessage = "There was a problem saving this entry. Please try again.";
                 return View(model);
             }
 
@@ -287,6 +281,7 @@ namespace Metal_Mate_MVC.Controllers
                 alertRequest.Currency = model.Currency;
                 alertRequest.Metal = model.Metal;
                 alertRequest.IsEnabled = model.IsEnabled;
+
                 var user = await _userManager.GetUserAsync(User);
 
                 if (user == null)
@@ -295,6 +290,7 @@ namespace Metal_Mate_MVC.Controllers
                     model.ErrorMessage = "There was a problem loading this entry. Please try again.";
                     return View(model);
                 }
+
                 alertRequest.User = user;
                 alertRequest.UserId = user.Id;
                 await _alertRequestService.SaveAsync(alertRequest);
@@ -332,7 +328,8 @@ namespace Metal_Mate_MVC.Controllers
                     return View(model);
                 }
 
-                var alertRequest = await _alertRequestService.GetByIdAsync(id.Value);
+                var alertRequest = await _alertRequestService.GetByIdAsync(id.Value, user.Id);
+
                 if (alertRequest == null)
                 {
                     _logger.LogError("The alert request is null. Request: {id}", id);
@@ -346,13 +343,6 @@ namespace Metal_Mate_MVC.Controllers
                 model.Value = alertRequest.Value;
                 model.Operator = alertRequest.Operator;
                 model.IsEnabled = alertRequest.IsEnabled;
-
-                if (alertRequest == null)
-                {
-                    _logger.LogError("The alert request is null. Request: {id}", id);
-                    model.ErrorMessage = "There was a problem loading this entry. Please try again.";
-                    return View(model);
-                }
 
             }
             catch (Exception ex)
@@ -373,7 +363,15 @@ namespace Metal_Mate_MVC.Controllers
             var model = new AlertRequestViewModel();
             try
             {
-                if (!await _alertRequestService.DeleteAsync(id))
+                var user = await _userManager.GetUserAsync(User);
+
+                if (user == null)
+                {
+                    _logger.LogError("The user is null. User: {UserName}", User.Identity?.Name);
+                    model.ErrorMessage = "There was a problem deleting this entry. Please try again.";
+                    return View(model);
+                }
+                if (!await _alertRequestService.DeleteAsync(id, user.Id))
                 {
                     _logger.LogError("The delete failed for Request: {id}", id);
                     model.ErrorMessage = "There was a problem deleting this entry. Please try again.";

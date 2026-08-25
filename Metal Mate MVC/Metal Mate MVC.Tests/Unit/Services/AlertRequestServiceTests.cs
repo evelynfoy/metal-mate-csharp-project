@@ -70,7 +70,7 @@ namespace Metal_Mate_MVC.Tests
 
         }
 
-        // In-memory Database - happy path - Save changes
+        // In-memory Database - happy path - Add changes
         [Fact]
         public async Task AddAsync_ValidResponse_ReturnsValidResult()
         {
@@ -149,7 +149,7 @@ namespace Metal_Mate_MVC.Tests
             var user = context.Users.First();
 
             // Act
-            var alertRequestRetrieved = await service.GetByIdAsync(1);
+            var alertRequestRetrieved = await service.GetByIdAsync(1, user.Id);
 
             // Assert
 
@@ -161,7 +161,7 @@ namespace Metal_Mate_MVC.Tests
 
         }
 
-        // In-memory Database - happy path - Save changes
+        // In-memory Database - happy path - Delete changes
         [Fact]
         public async Task DeleteAsync_ValidResponse_ReturnsValidResult()
         {
@@ -180,7 +180,7 @@ namespace Metal_Mate_MVC.Tests
 
 
             // Act
-            var isDeleted = await service.DeleteAsync(alertRequest.Id);
+            var isDeleted = await service.DeleteAsync(alertRequest.Id, user.Id);
 
             // Assert
             Assert.True(isDeleted);

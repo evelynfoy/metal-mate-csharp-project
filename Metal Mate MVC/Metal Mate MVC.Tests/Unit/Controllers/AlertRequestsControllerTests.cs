@@ -73,7 +73,7 @@ namespace Metal_Mate_MVC.Tests
             Assert.Empty(model.ErrorMessage);
 
             _apiServiceMock.Verify(
-                x => x.GetAPIDataAsync<List<Metal>>("symbols"),
+                s => s.GetAPIDataAsync<List<Metal>>("symbols"),
                 Times.Once);
         }
 
@@ -89,11 +89,11 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             _alertRequestServiceMock
-                .Setup(x => x.GetForUserAsync("user1"))
+                .Setup(s => s.GetForUserAsync("user1"))
                 .ReturnsAsync(new List<AlertRequest> { });
 
             // Act
@@ -124,11 +124,11 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             _alertRequestServiceMock
-                .Setup(x => x.GetForUserAsync("user1"))
+                .Setup(s => s.GetForUserAsync("user1"))
                 .ThrowsAsync(new Exception("Database failure"));
 
             // Act
@@ -144,11 +144,11 @@ namespace Metal_Mate_MVC.Tests
             Assert.Equal("Your alert requests are temporarily unavailable. Please try again later.", model.ErrorMessage);
 
             _alertRequestServiceMock.Verify(
-                x => x.GetForUserAsync("user1"),
+                s => s.GetForUserAsync("user1"),
                 Times.Once);
 
             _loggerMock.Verify(
-                x => x.Log(
+                     s => s.Log(
                     LogLevel.Error,
                     It.IsAny<EventId>(),
                     It.IsAny<It.IsAnyType>(),
@@ -164,7 +164,7 @@ namespace Metal_Mate_MVC.Tests
         {
             // Arrange
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync((ApplicationUser?)null);
 
             // Act
@@ -182,7 +182,7 @@ namespace Metal_Mate_MVC.Tests
                 model.ErrorMessage);
 
             _loggerMock.Verify(
-               x => x.Log(
+               s => s.Log(
                    LogLevel.Error,
                    It.IsAny<EventId>(),
                    It.IsAny<It.IsAnyType>(),
@@ -284,7 +284,7 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             _apiServiceMock
@@ -330,7 +330,7 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             _apiServiceMock
@@ -344,7 +344,7 @@ namespace Metal_Mate_MVC.Tests
             var alertRequest = new AlertRequest();
 
             _alertRequestServiceMock
-                .Setup(x => x.AddAsync(It.IsAny<AlertRequest>()))
+                .Setup(s => s.AddAsync(It.IsAny<AlertRequest>()))
                 .ThrowsAsync(new Exception("Database failure"));
 
             var model = new AlertRequestViewModel();
@@ -428,7 +428,7 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             _apiServiceMock
@@ -444,7 +444,7 @@ namespace Metal_Mate_MVC.Tests
             alertRequest.Id = 1;
 
             _alertRequestServiceMock
-                .Setup(s => s.GetByIdAsync(1))
+                .Setup(s => s.GetByIdAsync(1, user.Id))
                 .ReturnsAsync(alertRequest);
 
             // Act
@@ -476,7 +476,7 @@ namespace Metal_Mate_MVC.Tests
                 Times.Once);
 
             _alertRequestServiceMock.Verify(
-                s => s.GetByIdAsync(alertRequest.Id),
+                s => s.GetByIdAsync(alertRequest.Id, user.Id),
                 Times.Once);
 
         }
@@ -499,7 +499,7 @@ namespace Metal_Mate_MVC.Tests
             alertRequest.Id = 1;
 
             _alertRequestServiceMock
-                .Setup(s => s.GetByIdAsync(1))
+                .Setup(s => s.GetByIdAsync(1, user.Id))
                 .ReturnsAsync(alertRequest);
 
             // Act
@@ -569,7 +569,7 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             _apiServiceMock
@@ -585,7 +585,7 @@ namespace Metal_Mate_MVC.Tests
             alertRequest.Id = 1;
 
             _alertRequestServiceMock
-                .Setup(s => s.GetByIdAsync(1))
+                .Setup(s => s.GetByIdAsync(1, user.Id))
                 .ThrowsAsync(new Exception("The service failed to retrieve the alert request."));
 
             // Act
@@ -606,7 +606,7 @@ namespace Metal_Mate_MVC.Tests
                  Times.Once);
 
             _alertRequestServiceMock.Verify(
-                s => s.GetByIdAsync(alertRequest.Id),
+                s => s.GetByIdAsync(alertRequest.Id, user.Id),
                 Times.Once);
 
             _loggerMock.Verify(
@@ -631,7 +631,7 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             _apiServiceMock
@@ -643,7 +643,7 @@ namespace Metal_Mate_MVC.Tests
                  });
 
             _alertRequestServiceMock
-                .Setup(s => s.GetByIdAsync(1))
+                .Setup(s => s.GetByIdAsync(1, user.Id))
                 .ReturnsAsync((AlertRequest?)null);
 
 
@@ -686,7 +686,7 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             var model = new AlertRequestViewModel();
@@ -701,7 +701,7 @@ namespace Metal_Mate_MVC.Tests
             alertRequest.Id = 1;
 
             _alertRequestServiceMock
-                .Setup(x => x.SaveAsync(It.IsAny<AlertRequest>()))
+                .Setup(s => s.SaveAsync(It.IsAny<AlertRequest>()))
                 .Returns(Task.CompletedTask);
 
             // Act
@@ -712,7 +712,7 @@ namespace Metal_Mate_MVC.Tests
             var redirect = Assert.IsType<RedirectToActionResult>(result);
 
             _alertRequestServiceMock.Verify(
-                x => x.SaveAsync(It.IsAny<AlertRequest>()),
+                s => s.SaveAsync(It.IsAny<AlertRequest>()),
                 Times.Once);
 
             _userManagerMock.Verify(
@@ -821,7 +821,7 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             _apiServiceMock
@@ -894,14 +894,14 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
             alertRequest.Id = 1;
 
             _alertRequestServiceMock
-                .Setup(s => s.GetByIdAsync(1))
+                .Setup(s => s.GetByIdAsync(1, user.Id))
                 .ReturnsAsync(alertRequest);
 
             // Act
@@ -929,7 +929,7 @@ namespace Metal_Mate_MVC.Tests
                  Times.Once);
 
             _alertRequestServiceMock.Verify(
-                s => s.GetByIdAsync(alertRequest.Id),
+                s => s.GetByIdAsync(alertRequest.Id , user.Id),
                 Times.Once);
 
         }
@@ -952,7 +952,7 @@ namespace Metal_Mate_MVC.Tests
             alertRequest.Id = 1;
 
             _alertRequestServiceMock
-                .Setup(s => s.GetByIdAsync(1))
+                .Setup(s => s.GetByIdAsync(1, user.Id))
                 .ReturnsAsync(alertRequest);
 
             // Act
@@ -1022,7 +1022,7 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             _apiServiceMock
@@ -1038,7 +1038,7 @@ namespace Metal_Mate_MVC.Tests
             alertRequest.Id = 1;
 
             _alertRequestServiceMock
-                .Setup(s => s.GetByIdAsync(1))
+                .Setup(s => s.GetByIdAsync(1, user.Id))
                 .ThrowsAsync(new Exception("The service failed to retrieve the alert request."));
 
             // Act
@@ -1059,7 +1059,7 @@ namespace Metal_Mate_MVC.Tests
                  Times.Once);
 
             _alertRequestServiceMock.Verify(
-                s => s.GetByIdAsync(alertRequest.Id),
+                s => s.GetByIdAsync(alertRequest.Id, user.Id),
                 Times.Once);
 
             _loggerMock.Verify(
@@ -1084,7 +1084,7 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             _apiServiceMock
@@ -1096,7 +1096,7 @@ namespace Metal_Mate_MVC.Tests
                  });
 
             _alertRequestServiceMock
-                .Setup(s => s.GetByIdAsync(1))
+                .Setup(s => s.GetByIdAsync(1, user.Id))
                 .ReturnsAsync((AlertRequest?)null);
 
 
@@ -1140,14 +1140,14 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup( s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
             alertRequest.Id = 1;
 
             _alertRequestServiceMock
-                .Setup(s => s.GetByIdAsync(1))
+                .Setup(s => s.GetByIdAsync(1, user.Id))
                 .ReturnsAsync(alertRequest);
 
             // Act
@@ -1175,7 +1175,7 @@ namespace Metal_Mate_MVC.Tests
                  Times.Once);
 
             _alertRequestServiceMock.Verify(
-                s => s.GetByIdAsync(alertRequest.Id),
+                s => s.GetByIdAsync(alertRequest.Id, user.Id),
                 Times.Once);
 
         }
@@ -1198,7 +1198,7 @@ namespace Metal_Mate_MVC.Tests
             alertRequest.Id = 1;
 
             _alertRequestServiceMock
-                .Setup(s => s.GetByIdAsync(1))
+                .Setup(s => s.GetByIdAsync(1    , user.Id))
                 .ReturnsAsync(alertRequest);
 
             // Act
@@ -1268,7 +1268,7 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             _apiServiceMock
@@ -1284,7 +1284,7 @@ namespace Metal_Mate_MVC.Tests
             alertRequest.Id = 1;
 
             _alertRequestServiceMock
-                .Setup(s => s.GetByIdAsync(1))
+                .Setup(s => s.GetByIdAsync(1, user.Id))
                 .ThrowsAsync(new Exception("The service failed to retrieve the alert request."));
 
             // Act
@@ -1305,7 +1305,7 @@ namespace Metal_Mate_MVC.Tests
                  Times.Once);
 
             _alertRequestServiceMock.Verify(
-                s => s.GetByIdAsync(alertRequest.Id),
+                s => s.GetByIdAsync(alertRequest.Id, user.Id),
                 Times.Once);
 
             _loggerMock.Verify(
@@ -1330,7 +1330,7 @@ namespace Metal_Mate_MVC.Tests
             };
 
             _userManagerMock
-                .Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
             _apiServiceMock
@@ -1342,7 +1342,7 @@ namespace Metal_Mate_MVC.Tests
                  });
 
             _alertRequestServiceMock
-                .Setup(s => s.GetByIdAsync(1))
+                .Setup(s => s.GetByIdAsync(1, user.Id))
                 .ReturnsAsync((AlertRequest?)null);
 
 
@@ -1379,8 +1379,16 @@ namespace Metal_Mate_MVC.Tests
         public async Task DeleteConfirmed_ReturnsRedirectToIndex()
         {
             // Arrange
+            var user = new ApplicationUser
+            {
+                Id = "user1"
+            };
+
+            _userManagerMock
+                .Setup( s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync(user);
             _alertRequestServiceMock
-                .Setup(x => x.DeleteAsync(It.IsAny<int>()))
+                .Setup(s => s.DeleteAsync(It.IsAny<int>(), It.IsAny<string>()))
                 .ReturnsAsync(true);
 
             // Act
@@ -1393,7 +1401,7 @@ namespace Metal_Mate_MVC.Tests
 
 
             _alertRequestServiceMock.Verify(
-                x => x.DeleteAsync(It.IsAny<int>()),
+                s => s.DeleteAsync(It.IsAny<int>(), It.IsAny<string>()),
                 Times.Once);
 
         }
@@ -1403,8 +1411,17 @@ namespace Metal_Mate_MVC.Tests
         public async Task DeleteConfirmed_Exception_ReturnsModelViewWithError()
         {
             // Arrange
+            var user = new ApplicationUser
+            {
+                Id = "user1"
+            };
+
+            _userManagerMock
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync(user);
+
             _alertRequestServiceMock
-                .Setup(x => x.DeleteAsync(It.IsAny<int>()))
+                .Setup(s => s.DeleteAsync(It.IsAny<int>(), It.IsAny<string>()))
                 .ThrowsAsync(new Exception("The service failed to delete the alert request."));
 
             // Act
@@ -1420,7 +1437,7 @@ namespace Metal_Mate_MVC.Tests
             Assert.Equal("There was a problem deleting this entry. Please try again later.", model.ErrorMessage);
 
             _alertRequestServiceMock.Verify(
-                x => x.DeleteAsync(It.IsAny<int>()),
+                s => s.DeleteAsync(It.IsAny<int>(), It.IsAny<string>()),
                 Times.Once);
 
             _loggerMock.Verify(
