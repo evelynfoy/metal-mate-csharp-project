@@ -274,14 +274,6 @@ namespace Metal_Mate_MVC.Controllers
 
             try
             {
-                var alertRequest = new AlertRequest();
-                alertRequest.Id = id;
-                alertRequest.Value = model.Value;
-                alertRequest.Operator = model.Operator;
-                alertRequest.Currency = model.Currency;
-                alertRequest.Metal = model.Metal;
-                alertRequest.IsEnabled = model.IsEnabled;
-
                 var user = await _userManager.GetUserAsync(User);
 
                 if (user == null)
@@ -291,8 +283,21 @@ namespace Metal_Mate_MVC.Controllers
                     return View(model);
                 }
 
-                alertRequest.User = user;
-                alertRequest.UserId = user.Id;
+                var alertRequest = await _alertRequestService.GetByIdAsync(id, user.Id);
+
+                if (alertRequest == null)
+                {
+                    _logger.LogError("The alert request is null. Id: {Id}", id);
+                    model.ErrorMessage = "There was a problem loading this entry. Please try again.";
+                    return View(model);
+                }
+
+                alertRequest.Value = model.Value;
+                alertRequest.Operator = model.Operator;
+                alertRequest.Currency = model.Currency;
+                alertRequest.Metal = model.Metal;
+                alertRequest.IsEnabled = model.IsEnabled;
+
                 await _alertRequestService.SaveAsync(alertRequest);
 
                 return RedirectToAction(nameof(Index));
@@ -302,7 +307,6 @@ namespace Metal_Mate_MVC.Controllers
                 _logger.LogError(ex, "An error occurred while saving the data for the page." + ex.Message);
                 model.ErrorMessage = "There was a problem saving the information for this page. Please try again later.";
             }
-
             
             return View(model);
         }

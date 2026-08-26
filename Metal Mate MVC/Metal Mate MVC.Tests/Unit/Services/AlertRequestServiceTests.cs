@@ -92,7 +92,7 @@ namespace Metal_Mate_MVC.Tests
 
             // Assert
             var result = await context.AlertRequests
-                .SingleOrDefaultAsync(x => x.Id == alertRequest.Id,
+                .SingleOrDefaultAsync(s => s.Id == alertRequest.Id,
                 TestContext.Current.CancellationToken);
 
             Assert.NotNull(result);

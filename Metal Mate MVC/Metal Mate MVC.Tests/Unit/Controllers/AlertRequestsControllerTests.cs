@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Claims;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace Metal_Mate_MVC.Tests
 {
@@ -773,20 +774,36 @@ namespace Metal_Mate_MVC.Tests
 
         }
 
-        // Edit - Get - Mocked response from services - null id - Displays model showing error
+        // Edit - Post - Mocked response from services - different id - Displays model showing error
         [Fact]
         public async Task Edit_Post_IdNotMatchModel_ReturnsModelViewWithError()
         {
             // Arrange
             int id = 3;
 
+            var user = new ApplicationUser
+            {
+                Id = "user1"
+            };
+
+            _userManagerMock
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync((ApplicationUser?)null);
+
+            var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
+            alertRequest.Id = 1;
+
+            _alertRequestServiceMock
+                .Setup(s => s.GetByIdAsync(1, user.Id))
+                .ReturnsAsync(alertRequest);
+
             var model = new AlertRequestViewModel();
-            model.Id = 1;
-            model.Value = 1000;
-            model.Currency = "USD";
-            model.Metal = "XAU";
-            model.IsEnabled = true;
-            model.Operator = ComparisonOperator.GreaterThan;
+            model.Id = alertRequest.Id;
+            model.Value = alertRequest.Value;
+            model.Currency = alertRequest.Currency;
+            model.Metal = alertRequest.Metal;
+            model.IsEnabled = alertRequest.IsEnabled;
+            model.Operator = alertRequest.Operator;
 
             // Act
             var result = await _controller.Edit(id, model);
@@ -798,7 +815,7 @@ namespace Metal_Mate_MVC.Tests
             model = Assert.IsType<AlertRequestViewModel>(
                 viewResult.Model);
 
-            Assert.Equal("There was a problem loading this entry. Please try again.", model.ErrorMessage);
+            Assert.Equal("There was a problem saving this entry. Please try again.", model.ErrorMessage);
 
             _loggerMock.Verify(
                 s => s.Log(
@@ -832,16 +849,20 @@ namespace Metal_Mate_MVC.Tests
                      new Metal { Name = "Gold", Symbol = "XAU" }
                  });
 
-            var model = new AlertRequestViewModel();
-            model.Id = 1;
-            model.Value = 1000;
-            model.Currency = "USD";
-            model.Metal = "XAU";
-            model.IsEnabled = true;
-            model.Operator = ComparisonOperator.GreaterThan;
-
             var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
             alertRequest.Id = 1;
+
+            _alertRequestServiceMock
+                .Setup(s => s.GetByIdAsync(1, user.Id))
+                .ReturnsAsync(alertRequest);
+
+            var model = new AlertRequestViewModel();
+            model.Id = alertRequest.Id;
+            model.Value = alertRequest.Value;
+            model.Currency = alertRequest.Currency;
+            model.Metal = alertRequest.Metal;
+            model.IsEnabled = alertRequest.IsEnabled;
+            model.Operator = alertRequest.Operator;
 
             _alertRequestServiceMock
                 .Setup(s => s.SaveAsync(It.IsAny<AlertRequest>()))
