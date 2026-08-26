@@ -174,14 +174,8 @@ namespace Metal_Mate_MVC.Controllers
                 alertRequest.UserId = user.Id;
                 alertRequest.User = user;
 
-                ModelState.Remove(nameof(alertRequest.UserId));
-                ModelState.Remove(nameof(alertRequest.User));
-
-                if (ModelState.IsValid)
-                {
-                    await _alertRequestService.AddAsync(alertRequest);
-                    return RedirectToAction(nameof(Index));
-                }
+                await _alertRequestService.AddAsync(alertRequest);
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
@@ -262,7 +256,10 @@ namespace Metal_Mate_MVC.Controllers
         {
             if (id != model.Id)
             {
-                _logger.LogError("The id does not match the model id. Id: {id} Model Id: {model.Id}.", id, User.Identity?.Name);
+                _logger.LogError(
+                    "The id does not match the model id. Id: {id} Model Id: {model.Id}.",
+                    id,
+                    model.Id);
                 model.ErrorMessage = "There was a problem saving this entry. Please try again.";
                 return View(model);
             }

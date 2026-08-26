@@ -16,7 +16,7 @@ namespace Metal_Mate_MVC.Models.ViewModels
         [Range(1, int.MaxValue, ErrorMessage = "Value must be a positive integer.")]
         public int Value { get; set; }
 
-        public bool IsEnabled { get; set; }
+        public bool IsEnabled { get; set; } = true;
 
         public IEnumerable<SelectListItem> Metals { get; set; } = Enumerable.Empty<SelectListItem>();
         public IEnumerable<SelectListItem> Currencies { get; set; } = Enumerable.Empty<SelectListItem>();

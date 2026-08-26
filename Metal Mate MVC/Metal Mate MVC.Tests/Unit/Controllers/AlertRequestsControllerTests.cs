@@ -228,7 +228,7 @@ namespace Metal_Mate_MVC.Tests
             Assert.Empty(model.Currency);
             Assert.Equal(ComparisonOperator.LessThan, model.Operator);
             Assert.Equal(0, model.Value);
-            Assert.False(model.IsEnabled);
+            Assert.True(model.IsEnabled);
 
             Assert.Empty(model.ErrorMessage);
 
@@ -265,7 +265,7 @@ namespace Metal_Mate_MVC.Tests
             Assert.Empty(model.Currency);
             Assert.Equal(ComparisonOperator.LessThan, model.Operator);
             Assert.Equal(0, model.Value);
-            Assert.False(model.IsEnabled);
+            Assert.True(model.IsEnabled);
 
             Assert.Equal("There was a problem retrieving the informationfor this page. Please try again later.", model.ErrorMessage);
 
@@ -700,6 +700,10 @@ namespace Metal_Mate_MVC.Tests
 
             var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
             alertRequest.Id = 1;
+
+            _alertRequestServiceMock
+                .Setup(s => s.GetByIdAsync(1, user.Id))
+                .ReturnsAsync(alertRequest);
 
             _alertRequestServiceMock
                 .Setup(s => s.SaveAsync(It.IsAny<AlertRequest>()))
