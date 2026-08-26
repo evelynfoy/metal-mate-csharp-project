@@ -118,7 +118,7 @@ namespace Metal_Mate_MVC.Controllers
                 var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
                 model.Metals = metals.Select(x => new SelectListItem
                 {
-                    Value = x.Symbol.ToString(),
+                    Value = x.Name.ToString(),
                     Text = x.Name.ToString()
                 });
                 string[] currencies = ["EUR", "AUD", "BRL", "CAD", "CHF", "CNY", "DKK", "GBP", "HKD", "INR", "JPY", "KRW", 
@@ -227,7 +227,7 @@ namespace Metal_Mate_MVC.Controllers
                 var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
                 model.Metals = metals.Select(x => new SelectListItem
                 {
-                    Value = x.Symbol.ToString(),
+                    Value = x.Name.ToString(),
                     Text = x.Name.ToString()
                 });
                 string[] currencies = ["EUR", "AUD", "BRL", "CAD", "CHF", "CNY", "DKK", "GBP", "HKD", "INR", "JPY", "KRW",
