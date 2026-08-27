@@ -14,14 +14,14 @@
     <h1>My Alert Requests</h1>
 </header>
 
-<!-- Alert Requests Area - display if list not empty and no error message -->
+<!-- Alert Requests Area - display if no error message -->
 @if (string.IsNullOrEmpty(Model?.ErrorMessage))
 {
     <p>
         <a asp-action="Create">Create New</a>
     </p>
 
-   <table class="table">
+    <table class="table">
         <thead>
             <tr>
                 <th>
@@ -61,10 +61,19 @@
                     <td>
                         @Html.DisplayFor(modelItem => item.IsEnabled)
                     </td>
-                    <td>
+                    <td class="d-none d-md-block">
                         <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                         <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
                         <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    </td>
+                </tr>
+                <tr class="d-md-none">
+                    <td colspan="6">
+                        <div class="d-flex gap-3 mb-3">
+                            <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                            <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                            <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                        </div>
                     </td>
                 </tr>
             }
