@@ -20,6 +20,8 @@ builder.Services.AddHttpClient<IApiService, ApiService>(client =>
     client.BaseAddress = new Uri("https://api.gold-api.com/");
 });
 
+builder.Services.AddScoped<IAlertRequestService, AlertRequestService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

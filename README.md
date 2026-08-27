@@ -7,7 +7,7 @@ The aim of this project is to build a website using an MVC C# project in Visual 
 - The site will include authentication so the visitors can sign in and out.
 - Once signed in the visitor will be able to access a user profile page and set a favourite metal and currency that will then be defaulted to the drop downs lists on the home page.
 - Once signed in the visitor will also be able to set up email alert requests based on a metal price. This provides full CRUD functionality to a SQL server database to store these requests. 
-- There will be an Azure timer funtion backend that runs regurlaly and processes the email requests. If the current price falls within the parameters of the request an email will be sent out to the user.
+- There will be an Azure timer funtion backend that runs regurlarly and processes the email requests. If the current price falls within the parameters of the request an email will be sent out to the user.
 
   Example :-
   
@@ -20,6 +20,9 @@ The aim of this project is to build a website using an MVC C# project in Visual 
 - Displays 3 of the most common metal prices in EUR on the home page and then provides a drop down to select a metal and currency of choice to display the current price for this selection.
 - Uses JavaScript to update the price details every minute, on change of the metal and currency selections,  and on clicking the Refresh Price button.
 - Uses Microsoft.AspNetCore.Identity tables to hold user specific profile information such as favourite metal and currency.
+- Once logged in the user can access the Alert Requests page to add, edit, delete and view their own alert requests.
+- The alert requests table holds the UserId from the AspNetUsers table to ensure no one can access another users alerts.
+- Uses responsive styling to ensure a good user experiance on a variety of screen sizes.
 
 ## Testing
 ### API Testing
@@ -31,3 +34,6 @@ The aim of this project is to build a website using an MVC C# project in Visual 
 - The unit tests use a Moq mock to setup a mock user manager which returns either a valid user entry or an exception.
 - The integration tests use a CustomWebApplicationFactory to setup a user manager with a scope that contains a connection to an in-memory Sqlite database that it uses for the tests.
 - The CustomWebApplicationFactory also sets up a mock API service to return a valid response for the metal price API call and a list of metals for the dropdown list.
+### Alert Request Testing
+- The database access is via a sevice class which is tested using an in-memory Sqlite database.
+- Unit tests were added using Moq mock setups for the user manager and database service for all controller actions.

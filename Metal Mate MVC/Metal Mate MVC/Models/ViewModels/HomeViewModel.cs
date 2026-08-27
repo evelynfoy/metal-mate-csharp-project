@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 /* 
@@ -7,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
  * a list of SelectListItem objects for the dropdown in the view.
  * Similarily, the list of currencies is also converted into a list of SelectListItem objects.
  */
-namespace Metal_Mate_MVC.Models
+namespace Metal_Mate_MVC.Models.ViewModels
 {
     public class HomeViewModel
     {

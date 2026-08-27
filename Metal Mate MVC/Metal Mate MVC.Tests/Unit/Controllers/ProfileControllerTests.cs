@@ -1,5 +1,6 @@
 ﻿using Metal_Mate_MVC.Controllers;
 using Metal_Mate_MVC.Models;
+using Metal_Mate_MVC.Models.ViewModels;
 using Metal_Mate_MVC.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;

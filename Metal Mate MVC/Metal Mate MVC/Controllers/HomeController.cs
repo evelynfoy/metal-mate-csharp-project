@@ -1,6 +1,7 @@
 using Metal_Mate_MVC.DTOs;
 using Metal_Mate_MVC.Exceptions;
 using Metal_Mate_MVC.Models;
+using Metal_Mate_MVC.Models.ViewModels;
 using Metal_Mate_MVC.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
