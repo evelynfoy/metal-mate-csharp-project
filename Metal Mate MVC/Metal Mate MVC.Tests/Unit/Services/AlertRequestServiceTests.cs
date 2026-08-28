@@ -193,5 +193,32 @@ namespace Metal_Mate_MVC.Tests
 
         }
 
+        // In-memory Database - happy path - Returns all requests
+        [Fact]
+        public async Task GetAllAlertRequestsAsync_ValidResponse_ReturnsAllRequests()
+        {
+
+            // Arrange
+            // Create an in-memory SQLite database with two users and two alert requests for the first user and one for the second user
+            // The boolean parameter tells the method to create the alert requests for the first user.
+            await using var testDb =
+                await SetUpTestDB.CreateAsync(TestContext.Current.CancellationToken, true);
+
+            var context = testDb.Context;
+
+            var service = new AlertRequestService(context);
+            //var user = context.Users.First();
+
+            // Act
+            var result = await service.GetAllAlertRequestsAsync();
+
+            // Assert
+            Assert.NotNull(result);
+
+            var requests = Assert.IsType<List<AlertRequest>>(result);
+            Assert.Equal(3, requests.Count);
+
+        }
+
     }
 }

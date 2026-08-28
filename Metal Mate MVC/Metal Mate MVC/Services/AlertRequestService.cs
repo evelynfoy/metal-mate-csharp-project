@@ -6,6 +6,7 @@ namespace Metal_Mate_MVC.Services
 {
     public interface IAlertRequestService
     {
+        Task<List<AlertRequest>> GetAllAlertRequestsAsync();
         Task<List<AlertRequest>> GetForUserAsync(string userId);
         Task AddAsync(AlertRequest alertRequest);
         Task SaveAsync(AlertRequest alertRequest);
@@ -20,6 +21,13 @@ namespace Metal_Mate_MVC.Services
         public AlertRequestService(ApplicationDbContext context)
         {
             _context = context;
+        }
+
+
+        public async Task<List<AlertRequest>> GetAllAlertRequestsAsync()
+        {
+            return await _context.AlertRequests
+                    .ToListAsync();
         }
 
         public async Task<List<AlertRequest>> GetForUserAsync(string userId)
