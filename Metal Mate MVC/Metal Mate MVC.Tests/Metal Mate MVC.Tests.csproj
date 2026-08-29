@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AlertGenerator\AlertGenerator.csproj" />
     <ProjectReference Include="..\Metal Mate MVC\Metal Mate MVC.csproj" />
   </ItemGroup>
 
