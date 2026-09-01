@@ -165,11 +165,9 @@ namespace Metal_Mate_MVC.Controllers
                     Operator = model.Operator,
                     Value = model.Value,
                     IsEnabled = model.IsEnabled,
-                    UserId = user.Id
+                    UserId = user.Id,
+                    User = user
                 };
-
-                alertRequest.UserId = user.Id;
-                alertRequest.User = user;
 
                 await _alertRequestService.AddAsync(alertRequest);
                 return RedirectToAction(nameof(Index));
