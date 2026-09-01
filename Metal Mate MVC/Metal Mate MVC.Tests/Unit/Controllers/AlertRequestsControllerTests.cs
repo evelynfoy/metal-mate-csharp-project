@@ -1,5 +1,4 @@
 using Metal_Mate_MVC.Controllers;
-using Metal_Mate_MVC.Data;
 using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Models.ViewModels;
 using Metal_Mate_MVC.Services;
@@ -7,11 +6,9 @@ using Metal_Mate_MVC.Tests.Unit.SetUp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Claims;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace Metal_Mate_MVC.Tests
 {
@@ -20,7 +17,6 @@ namespace Metal_Mate_MVC.Tests
         private readonly Mock<ILogger<AlertRequestsController>> _loggerMock;
         private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
         private readonly Mock<IAlertRequestService> _alertRequestServiceMock;
-        private readonly ApplicationDbContext _context;
         private readonly Mock<IApiService> _apiServiceMock;
 
         private readonly AlertRequestsController _controller;
@@ -30,11 +26,9 @@ namespace Metal_Mate_MVC.Tests
             _loggerMock = new Mock<ILogger<AlertRequestsController>>();
             _userManagerMock = SetUpMocks.CreateUserManagerMock();
             _alertRequestServiceMock = new Mock<IAlertRequestService>();
-            _context = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>().Options);
             _apiServiceMock = new Mock<IApiService>();
 
             _controller = CreateAlertRequestController(
-                            _context,
                             _loggerMock.Object,
                             _userManagerMock.Object,
                             _alertRequestServiceMock.Object,
@@ -1482,14 +1476,12 @@ namespace Metal_Mate_MVC.Tests
 
 
 
-        private static AlertRequestsController CreateAlertRequestController(ApplicationDbContext context,
-                                                                            ILogger<AlertRequestsController> logger,
+        private static AlertRequestsController CreateAlertRequestController(ILogger<AlertRequestsController> logger,
                                                                             UserManager<ApplicationUser> userManager,
                                                                             IAlertRequestService alertRequestService,
                                                                             IApiService apiService)
         {
             var controller = new AlertRequestsController(
-                            context,
                             logger,
                             userManager,
                             alertRequestService,

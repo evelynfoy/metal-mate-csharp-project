@@ -13,19 +13,16 @@ namespace Metal_Mate_MVC.Controllers
     [Authorize]
     public class AlertRequestsController : Controller
     {
-        private readonly ApplicationDbContext _context;
         private readonly ILogger<AlertRequestsController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IAlertRequestService _alertRequestService;
         private readonly IApiService _apiService;
 
-        public AlertRequestsController(ApplicationDbContext context,
-                                       ILogger<AlertRequestsController> logger,
+        public AlertRequestsController(ILogger<AlertRequestsController> logger,
                                        UserManager<ApplicationUser> userManager,
                                        IAlertRequestService alertRequestService,
                                        IApiService apiService)
         {
-            _context = context;
             _logger = logger;
             _userManager = userManager;
             _alertRequestService = alertRequestService;
@@ -387,11 +384,6 @@ namespace Metal_Mate_MVC.Controllers
             }
             return View(model);
 
-        }
-
-        private bool AlertRequestExists(int id)
-        {
-            return _context.AlertRequests.Any(e => e.Id == id);
         }
     }
 }
