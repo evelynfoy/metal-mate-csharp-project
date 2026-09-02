@@ -1,12 +1,9 @@
-using Metal_Mate_MVC.Data;
 using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Models.ViewModels;
+using Metal_Mate_MVC.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Metal_Mate_MVC.Services;
 
 namespace Metal_Mate_MVC.Controllers
 {
@@ -16,17 +13,17 @@ namespace Metal_Mate_MVC.Controllers
         private readonly ILogger<AlertRequestsController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IAlertRequestService _alertRequestService;
-        private readonly IApiService _apiService;
+        private readonly IDropdownOptionsService _dropdownOptionsService;
 
         public AlertRequestsController(ILogger<AlertRequestsController> logger,
                                        UserManager<ApplicationUser> userManager,
                                        IAlertRequestService alertRequestService,
-                                       IApiService apiService)
+                                       IDropdownOptionsService dropdownOptionsService)
         {
             _logger = logger;
             _userManager = userManager;
             _alertRequestService = alertRequestService;
-            _apiService = apiService;
+            _dropdownOptionsService = dropdownOptionsService;
         }
 
         // GET: AlertRequests
@@ -47,7 +44,6 @@ namespace Metal_Mate_MVC.Controllers
 
                 model.AlertRequests =
                     await _alertRequestService.GetForUserAsync(user.Id);
-
                 
             }
             catch (Exception ex)
@@ -112,24 +108,12 @@ namespace Metal_Mate_MVC.Controllers
 
             try
             {
-                var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
-                model.Metals = metals.Select(x => new SelectListItem
-                {
-                    Value = x.Name.ToString(),
-                    Text = x.Name.ToString()
-                });
-                string[] currencies = ["EUR", "AUD", "BRL", "CAD", "CHF", "CNY", "DKK", "GBP", "HKD", "INR", "JPY", "KRW", 
-                    "MXN", "NOK", "NZD", "SEK", "SGD", "USD", "ZAR"];
-                model.Currencies = currencies.Select(c => new SelectListItem
-                {
-                    Value = c,
-                    Text = c
-                });
+                await _dropdownOptionsService.PopulateAsync(model);
             }
             catch (Exception ex) 
             {
                 _logger.LogError(ex, "An error occurred while fetching data for the page." + ex.Message);
-                model.ErrorMessage = "There was a problem retrieving the informationfor this page. Please try again later.";
+                model.ErrorMessage = "There was a problem retrieving the information for this page. Please try again later.";
             }
 
             return View(model);
@@ -155,8 +139,6 @@ namespace Metal_Mate_MVC.Controllers
                     model.ErrorMessage = "There was a problem saving this entry. Please try again.";
                     return View(model);
                 }
-
-                var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
 
                 var alertRequest = new AlertRequest
                 {
@@ -219,19 +201,7 @@ namespace Metal_Mate_MVC.Controllers
                 model.Operator = alertRequest.Operator;
                 model.IsEnabled = alertRequest.IsEnabled;
 
-                var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
-                model.Metals = metals.Select(x => new SelectListItem
-                {
-                    Value = x.Name.ToString(),
-                    Text = x.Name.ToString()
-                });
-                string[] currencies = ["EUR", "AUD", "BRL", "CAD", "CHF", "CNY", "DKK", "GBP", "HKD", "INR", "JPY", "KRW",
-                    "MXN", "NOK", "NZD", "SEK", "SGD", "USD", "ZAR"];
-                model.Currencies = currencies.Select(c => new SelectListItem
-                {
-                    Value = c,
-                    Text = c
-                });
+                await _dropdownOptionsService.PopulateAsync(model);
 
             }
             catch (Exception ex)

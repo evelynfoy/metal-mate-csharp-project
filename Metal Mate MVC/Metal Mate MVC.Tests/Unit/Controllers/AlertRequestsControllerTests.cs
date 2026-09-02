@@ -6,6 +6,7 @@ using Metal_Mate_MVC.Tests.Unit.SetUp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Claims;
@@ -18,6 +19,8 @@ namespace Metal_Mate_MVC.Tests
         private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
         private readonly Mock<IAlertRequestService> _alertRequestServiceMock;
         private readonly Mock<IApiService> _apiServiceMock;
+        private readonly Mock<IDropdownOptionsService> _dropdownOptionsServiceMock;
+
 
         private readonly AlertRequestsController _controller;
 
@@ -27,12 +30,14 @@ namespace Metal_Mate_MVC.Tests
             _userManagerMock = SetUpMocks.CreateUserManagerMock();
             _alertRequestServiceMock = new Mock<IAlertRequestService>();
             _apiServiceMock = new Mock<IApiService>();
+            _dropdownOptionsServiceMock = new Mock<IDropdownOptionsService>();
 
             _controller = CreateAlertRequestController(
                             _loggerMock.Object,
                             _userManagerMock.Object,
                             _alertRequestServiceMock.Object,
-                            _apiServiceMock.Object);
+                            _apiServiceMock.Object,
+                            _dropdownOptionsServiceMock.Object);
         }
 
         // Mocked response - happy path - Authenticated user with alert requests
@@ -43,14 +48,10 @@ namespace Metal_Mate_MVC.Tests
 
             var alertRequest = new AlertRequest();
 
-            // Mock the API service to return a valid list of metals
-            _apiServiceMock
-             .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-             .ReturnsAsync(new List<Metal>
-             {
-                 new Metal { Name = "Silver", Symbol = "XAG" },
-                 new Metal { Name = "Gold", Symbol = "XAU" }
-             });
+            // Mock the Dropdown Options service to return a successful run
+            _dropdownOptionsServiceMock
+                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
+                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _controller.Create();
@@ -67,9 +68,10 @@ namespace Metal_Mate_MVC.Tests
 
             Assert.Empty(model.ErrorMessage);
 
-            _apiServiceMock.Verify(
-                s => s.GetAPIDataAsync<List<Metal>>("symbols"),
+            _dropdownOptionsServiceMock.Verify(
+                s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()),
                 Times.Once);
+
         }
 
         // Mocked response - happy path - Authenticated user with no requests   
@@ -196,14 +198,10 @@ namespace Metal_Mate_MVC.Tests
         public async Task Create_Get_ReturnsEmptyView()
         {
             // Arrange
-            // Mock the API service to return a valid list of metals
-            _apiServiceMock
-             .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-             .ReturnsAsync(new List<Metal>
-             {
-                 new Metal { Name = "Silver", Symbol = "XAG" },
-                 new Metal { Name = "Gold", Symbol = "XAU" }
-             });
+            // Mock the Dropdown Options service to return a successful run
+            _dropdownOptionsServiceMock
+                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
+                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _controller.Create();
@@ -216,8 +214,6 @@ namespace Metal_Mate_MVC.Tests
                 viewResult.Model);
 
             Assert.Equal(0,model.Id);
-            Assert.NotNull(model.Metals);
-            Assert.NotNull(model.Currencies);
             Assert.Empty(model.Metal);
             Assert.Empty(model.Currency);
             Assert.Equal(ComparisonOperator.LessThan, model.Operator);
@@ -226,20 +222,20 @@ namespace Metal_Mate_MVC.Tests
 
             Assert.Empty(model.ErrorMessage);
 
-            _apiServiceMock.Verify(
-                s => s.GetAPIDataAsync<List<Metal>>("symbols"),
+            _dropdownOptionsServiceMock.Verify(
+                s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()),
                 Times.Once);
+
         }
 
-        // Create - Get - Mocked response from API service to return an exception  
+        // Create - Get - Mocked response from dropdown options service to return an exception  
         [Fact]
         public async Task Create_Get_Exception_ReturnsError()
         {
             // Arrange
-
-            // Mock the API service to return an exception when trying to get the list of metals
-            _apiServiceMock
-                .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
+            // Mock the Dropdown Options service to return an exception
+            _dropdownOptionsServiceMock
+                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
                 .ThrowsAsync(new Exception("An error ocurred"));
 
             // Act
@@ -253,18 +249,16 @@ namespace Metal_Mate_MVC.Tests
                 viewResult.Model);
 
             Assert.Equal(0, model.Id);
-            Assert.Empty(model.Metals!);
-            Assert.Empty(model.Currencies);
             Assert.Empty(model.Metal);
             Assert.Empty(model.Currency);
             Assert.Equal(ComparisonOperator.LessThan, model.Operator);
             Assert.Equal(0, model.Value);
             Assert.True(model.IsEnabled);
 
-            Assert.Equal("There was a problem retrieving the informationfor this page. Please try again later.", model.ErrorMessage);
+            Assert.Equal("There was a problem retrieving the information for this page. Please try again later.", model.ErrorMessage);
 
-            _apiServiceMock.Verify(
-                s => s.GetAPIDataAsync<List<Metal>>("symbols"),
+            _dropdownOptionsServiceMock.Verify(
+                s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()),
                 Times.Once);
         }
 
@@ -281,14 +275,6 @@ namespace Metal_Mate_MVC.Tests
             _userManagerMock
                 .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
-
-            _apiServiceMock
-             .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-             .ReturnsAsync(new List<Metal>
-             {
-                 new Metal { Name = "Silver", Symbol = "XAG" },
-                 new Metal { Name = "Gold", Symbol = "XAU" }
-             });
 
             var model = new AlertRequestViewModel();
             model.Id = 1;
@@ -307,11 +293,6 @@ namespace Metal_Mate_MVC.Tests
             _userManagerMock.Verify(
                  s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()),
                  Times.Once);
-
-            _apiServiceMock.Verify(
-                 s => s.GetAPIDataAsync<List<Metal>>("symbols"),
-                 Times.Once);
-
         }
 
         // Create - Post - Mocked response from user manager and services - Exception thrown - Returns error message
@@ -361,9 +342,12 @@ namespace Metal_Mate_MVC.Tests
                  s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()),
                  Times.Once);
 
-            _apiServiceMock.Verify(
-                 s => s.GetAPIDataAsync<List<Metal>>("symbols"),
-                 Times.Once);
+            //_dropdownOptionsServiceMock.Verify(
+            //    s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()),
+            //    Times.Once);
+            //_apiServiceMock.Verify(
+            //     s => s.GetAPIDataAsync<List<Metal>>("symbols"),
+            //     Times.Once);
 
             _alertRequestServiceMock.Verify(
                  s => s.AddAsync(It.IsAny<AlertRequest>()),
@@ -426,14 +410,10 @@ namespace Metal_Mate_MVC.Tests
                 .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
-            _apiServiceMock
-                 .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-                 .ReturnsAsync(new List<Metal>
-                 {
-                     new Metal { Name = "Silver", Symbol = "XAG" },
-                     new Metal { Name = "Gold", Symbol = "XAU" }
-                 });
-
+            // Mock the Dropdown Options service to return a successful run
+            _dropdownOptionsServiceMock
+                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
+                .Returns(Task.CompletedTask);
 
             var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
             alertRequest.Id = 1;
@@ -466,9 +446,12 @@ namespace Metal_Mate_MVC.Tests
                  s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()),
                  Times.Once);
 
-            _apiServiceMock.Verify(
-                s => s.GetAPIDataAsync<List<Metal>>("symbols"),
+            _dropdownOptionsServiceMock.Verify(
+                s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()),
                 Times.Once);
+            //_apiServiceMock.Verify(
+            //    s => s.GetAPIDataAsync<List<Metal>>("symbols"),
+            //    Times.Once);
 
             _alertRequestServiceMock.Verify(
                 s => s.GetByIdAsync(alertRequest.Id, user.Id),
@@ -567,15 +550,6 @@ namespace Metal_Mate_MVC.Tests
                 .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
-            _apiServiceMock
-                 .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-                 .ReturnsAsync(new List<Metal>
-                 {
-                     new Metal { Name = "Silver", Symbol = "XAG" },
-                     new Metal { Name = "Gold", Symbol = "XAU" }
-                 });
-
-
             var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
             alertRequest.Id = 1;
 
@@ -628,14 +602,6 @@ namespace Metal_Mate_MVC.Tests
             _userManagerMock
                 .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
-
-            _apiServiceMock
-                 .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-                 .ReturnsAsync(new List<Metal>
-                 {
-                     new Metal { Name = "Silver", Symbol = "XAG" },
-                     new Metal { Name = "Gold", Symbol = "XAU" }
-                 });
 
             _alertRequestServiceMock
                 .Setup(s => s.GetByIdAsync(1, user.Id))
@@ -839,13 +805,18 @@ namespace Metal_Mate_MVC.Tests
                 .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
-            _apiServiceMock
-                 .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-                 .ReturnsAsync(new List<Metal>
-                 {
-                     new Metal { Name = "Silver", Symbol = "XAG" },
-                     new Metal { Name = "Gold", Symbol = "XAU" }
-                 });
+            // Mock the Dropdown Options service to return a successful run
+            _dropdownOptionsServiceMock
+                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
+                .Returns(Task.CompletedTask);
+
+            //_apiServiceMock
+            //     .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
+            //     .ReturnsAsync(new List<Metal>
+            //     {
+            //         new Metal { Name = "Silver", Symbol = "XAG" },
+            //         new Metal { Name = "Gold", Symbol = "XAU" }
+            //     });
 
             var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
             alertRequest.Id = 1;
@@ -1044,13 +1015,18 @@ namespace Metal_Mate_MVC.Tests
                 .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
-            _apiServiceMock
-                 .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-                 .ReturnsAsync(new List<Metal>
-                 {
-                     new Metal { Name = "Silver", Symbol = "XAG" },
-                     new Metal { Name = "Gold", Symbol = "XAU" }
-                 });
+            // Mock the Dropdown Options service to return a successful run
+            _dropdownOptionsServiceMock
+                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
+                .Returns(Task.CompletedTask);
+
+            //_apiServiceMock
+            //     .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
+            //     .ReturnsAsync(new List<Metal>
+            //     {
+            //         new Metal { Name = "Silver", Symbol = "XAG" },
+            //         new Metal { Name = "Gold", Symbol = "XAU" }
+            //     });
 
 
             var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
@@ -1106,13 +1082,18 @@ namespace Metal_Mate_MVC.Tests
                 .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
-            _apiServiceMock
-                 .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-                 .ReturnsAsync(new List<Metal>
-                 {
-                     new Metal { Name = "Silver", Symbol = "XAG" },
-                     new Metal { Name = "Gold", Symbol = "XAU" }
-                 });
+            // Mock the Dropdown Options service to return a successful run
+            _dropdownOptionsServiceMock
+                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
+                .Returns(Task.CompletedTask);
+
+            //_apiServiceMock
+            //     .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
+            //     .ReturnsAsync(new List<Metal>
+            //     {
+            //         new Metal { Name = "Silver", Symbol = "XAG" },
+            //         new Metal { Name = "Gold", Symbol = "XAU" }
+            //     });
 
             _alertRequestServiceMock
                 .Setup(s => s.GetByIdAsync(1, user.Id))
@@ -1290,15 +1271,6 @@ namespace Metal_Mate_MVC.Tests
                 .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
 
-            _apiServiceMock
-                 .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-                 .ReturnsAsync(new List<Metal>
-                 {
-                     new Metal { Name = "Silver", Symbol = "XAG" },
-                     new Metal { Name = "Gold", Symbol = "XAU" }
-                 });
-
-
             var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
             alertRequest.Id = 1;
 
@@ -1351,14 +1323,6 @@ namespace Metal_Mate_MVC.Tests
             _userManagerMock
                 .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(user);
-
-            _apiServiceMock
-                 .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-                 .ReturnsAsync(new List<Metal>
-                 {
-                     new Metal { Name = "Silver", Symbol = "XAG" },
-                     new Metal { Name = "Gold", Symbol = "XAU" }
-                 });
 
             _alertRequestServiceMock
                 .Setup(s => s.GetByIdAsync(1, user.Id))
@@ -1479,13 +1443,14 @@ namespace Metal_Mate_MVC.Tests
         private static AlertRequestsController CreateAlertRequestController(ILogger<AlertRequestsController> logger,
                                                                             UserManager<ApplicationUser> userManager,
                                                                             IAlertRequestService alertRequestService,
-                                                                            IApiService apiService)
+                                                                            IApiService apiService,
+                                                                            IDropdownOptionsService dropdownOptionsService)
         {
             var controller = new AlertRequestsController(
                             logger,
                             userManager,
                             alertRequestService,
-                            apiService);
+                            dropdownOptionsService);
 
             // Set up an authenticated user
             var claims = new[]
