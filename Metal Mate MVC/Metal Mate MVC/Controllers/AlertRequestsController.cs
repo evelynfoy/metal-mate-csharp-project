@@ -1,9 +1,11 @@
+using Metal_Mate_MVC.DTOs;
 using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Models.ViewModels;
 using Metal_Mate_MVC.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 
 namespace Metal_Mate_MVC.Controllers
 {
@@ -14,16 +16,20 @@ namespace Metal_Mate_MVC.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IAlertRequestService _alertRequestService;
         private readonly IDropdownOptionsService _dropdownOptionsService;
+        private readonly IApiService _ApiService;
+
 
         public AlertRequestsController(ILogger<AlertRequestsController> logger,
                                        UserManager<ApplicationUser> userManager,
                                        IAlertRequestService alertRequestService,
-                                       IDropdownOptionsService dropdownOptionsService)
+                                       IDropdownOptionsService dropdownOptionsService,
+                                       IApiService apiService)
         {
             _logger = logger;
             _userManager = userManager;
             _alertRequestService = alertRequestService;
             _dropdownOptionsService = dropdownOptionsService;
+            _ApiService = apiService;
         }
 
         // GET: AlertRequests
@@ -44,7 +50,10 @@ namespace Metal_Mate_MVC.Controllers
 
                 model.AlertRequests =
                     await _alertRequestService.GetForUserAsync(user.Id);
+
+                var metals = await _ApiService.GetAPIDataAsync<List<Metal>>("symbols");
                 
+                model.MetalNames = metals.ToDictionary(m => m.Symbol, m => m.Name);
             }
             catch (Exception ex)
             {

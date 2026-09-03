@@ -8,6 +8,8 @@ namespace Metal_Mate_MVC.Models.ViewModels
         public List<Metal_Mate_MVC.Models.AlertRequest> AlertRequests { get; set; }
             = new();
 
+        public Dictionary<string, string> MetalNames { get; set; } = new();
+
         public string ErrorMessage { get; set; } = string.Empty;
     }
 }

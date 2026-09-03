@@ -36,8 +36,9 @@ namespace Metal_Mate_MVC.Tests
                             _loggerMock.Object,
                             _userManagerMock.Object,
                             _alertRequestServiceMock.Object,
-                            _apiServiceMock.Object,
-                            _dropdownOptionsServiceMock.Object);
+                            _dropdownOptionsServiceMock.Object,
+                            _apiServiceMock.Object
+                            );
         }
 
         // Mocked response - happy path - Authenticated user with alert requests
@@ -45,31 +46,46 @@ namespace Metal_Mate_MVC.Tests
         public async Task Index_ReturnsOnlyCurrentUsersAlertRequests()
         {
             // Arrange
+            var user = new ApplicationUser
+            {
+                Id = "user1"
+            };
 
-            var alertRequest = new AlertRequest();
+            _userManagerMock
+                .Setup(s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync(user);
 
-            // Mock the Dropdown Options service to return a successful run
-            _dropdownOptionsServiceMock
-                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
-                .Returns(Task.CompletedTask);
+            var alertRequest = SetUpTestDB.CreateUserAlertRequest(user);
+            var alertRequests = new List<AlertRequest> { alertRequest };
+
+            _alertRequestServiceMock
+                .Setup(s => s.GetForUserAsync("user1"))
+                .ReturnsAsync(alertRequests);
+
+            // Mock the API service to return a valid list of metals
+            _apiServiceMock
+             .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
+             .ReturnsAsync(new List<Metal>
+             {
+                 new Metal { Name = "Silver", Symbol = "XAG" },
+                 new Metal { Name = "Gold", Symbol = "XAU" },
+             });
 
             // Act
-            var result = await _controller.Create();
+            var result = await _controller.Index();
 
             // Assert
             var viewResult = Assert.IsType<ViewResult>(result);
 
-            var model = Assert.IsType<AlertRequestViewModel>(
+            var model = Assert.IsType<AlertRequestIndexViewModel>(
                 viewResult.Model);
 
             Assert.NotNull(model);
-            Assert.NotNull(model.Metals);
-            Assert.NotNull(model.Currencies);
-
+            Assert.NotNull(model.MetalNames);
             Assert.Empty(model.ErrorMessage);
 
-            _dropdownOptionsServiceMock.Verify(
-                s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()),
+            _apiServiceMock.Verify(
+                s => s.GetAPIDataAsync<List<Metal>>("symbols"),
                 Times.Once);
 
         }
@@ -93,6 +109,14 @@ namespace Metal_Mate_MVC.Tests
                 .Setup(s => s.GetForUserAsync("user1"))
                 .ReturnsAsync(new List<AlertRequest> { });
 
+            _apiServiceMock
+             .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
+             .ReturnsAsync(new List<Metal>
+             {
+                 new Metal { Name = "Silver", Symbol = "XAG" },
+                 new Metal { Name = "Gold", Symbol = "XAU" },
+             });
+
             // Act
             var result = await _controller.Index();
 
@@ -107,6 +131,11 @@ namespace Metal_Mate_MVC.Tests
             var requests = model.AlertRequests.ToList();
 
             Assert.Empty(requests);
+            Assert.NotNull(model.MetalNames);
+
+            _apiServiceMock.Verify(
+                s => s.GetAPIDataAsync<List<Metal>>("symbols"),
+                Times.Once);
 
         }
 
@@ -1443,14 +1472,17 @@ namespace Metal_Mate_MVC.Tests
         private static AlertRequestsController CreateAlertRequestController(ILogger<AlertRequestsController> logger,
                                                                             UserManager<ApplicationUser> userManager,
                                                                             IAlertRequestService alertRequestService,
-                                                                            IApiService apiService,
-                                                                            IDropdownOptionsService dropdownOptionsService)
+                                                                            IDropdownOptionsService dropdownOptionsService,
+                                                                            IApiService apiService
+                                                                            )
         {
             var controller = new AlertRequestsController(
                             logger,
                             userManager,
                             alertRequestService,
-                            dropdownOptionsService);
+                            dropdownOptionsService,
+                            apiService
+                            );
 
             // Set up an authenticated user
             var claims = new[]

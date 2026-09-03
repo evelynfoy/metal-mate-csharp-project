@@ -8,9 +8,9 @@ namespace Metal_Mate_MVC.DTOs
         IEnumerable<SelectListItem> Currencies { get; set; }
     }
 
-    public class CommonSelectLists
+    public class CommonSelectLists : ICommonSelectLists
     {
-        public IEnumerable<SelectListItem> Metals { get; init; } = [];
-        public IEnumerable<SelectListItem> Currencies { get; init; } = [];
+        public IEnumerable<SelectListItem> Metals { get; set; } = [];
+        public IEnumerable<SelectListItem> Currencies { get; set; } = [];
     }
 }
