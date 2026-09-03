@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
+using Metal_Mate_MVC.DTOs;
 
 namespace Metal_Mate_MVC.Models.ViewModels
 {
-    public class AlertRequestViewModel
+    public class AlertRequestViewModel : ICommonSelectLists
     {
         public int Id { get; set; }
 

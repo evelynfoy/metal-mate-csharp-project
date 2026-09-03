@@ -1,13 +1,13 @@
-﻿using Metal_Mate_MVC.Models;
-using Metal_Mate_MVC.Models.ViewModels;
+﻿using Metal_Mate_MVC.Constants;
+using Metal_Mate_MVC.DTOs;
+using Metal_Mate_MVC.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Metal_Mate_MVC.Constants;
 
 namespace Metal_Mate_MVC.Services
 {
     public interface IDropdownOptionsService
     {
-        Task PopulateAsync(AlertRequestViewModel model);
+        Task PopulateAsync(ICommonSelectLists model);
     }
 
     public class DropdownOptionsService : IDropdownOptionsService
@@ -19,21 +19,22 @@ namespace Metal_Mate_MVC.Services
             _apiService = apiService;
         }
 
-        public async Task PopulateAsync(AlertRequestViewModel model)
+        public async Task PopulateAsync(ICommonSelectLists model)
         {
             var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
 
-            model.Metals = metals.Select(x => new SelectListItem
+            model.Metals = metals.Select(m => new SelectListItem
             {
-                Value = x.Name.ToString(),
-                Text = x.Name.ToString()
+                Value = m.Symbol,
+                Text = m.Name
             });
 
-            model.Currencies = SupportedCurrencies.All.Select(c => new SelectListItem
-            {
-                Value = c,
-                Text = c
-            });
+            model.Currencies = SupportedCurrencies.All
+                .Select(c => new SelectListItem
+                {
+                    Value = c,
+                    Text = c
+                });
         }
     }
 }

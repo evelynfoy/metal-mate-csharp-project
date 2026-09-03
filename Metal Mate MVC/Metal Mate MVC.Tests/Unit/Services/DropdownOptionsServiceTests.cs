@@ -44,7 +44,7 @@ namespace Metal_Mate_MVC.Tests.Unit.Services
             Assert.NotEmpty(model.Currencies);
 
             Assert.Equal("AUD", model.Currencies.First().Value);
-            Assert.Equal("Silver", model.Metals.First().Value);
+            Assert.Equal("XAG", model.Metals.First().Value);
 
         }
 

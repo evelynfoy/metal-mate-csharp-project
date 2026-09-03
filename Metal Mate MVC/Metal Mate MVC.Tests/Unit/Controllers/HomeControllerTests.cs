@@ -20,6 +20,7 @@ namespace Metal_Mate_MVC.Tests
         private readonly Mock<ILogger<HomeController>> _loggerMock;
         private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
         private readonly Mock<IApiService> _apiServiceMock;
+        private readonly Mock<IDropdownOptionsService> _dropdownOptionsServiceMock;
 
         private readonly HomeController _controller;
 
@@ -28,11 +29,13 @@ namespace Metal_Mate_MVC.Tests
             _loggerMock = new Mock<ILogger<HomeController>>();
             _userManagerMock = SetUpMocks.CreateUserManagerMock();
             _apiServiceMock = new Mock<IApiService>();
+            _dropdownOptionsServiceMock = new Mock<IDropdownOptionsService>();
 
             _controller = new HomeController(
                 _loggerMock.Object,
                 _userManagerMock.Object,
-                _apiServiceMock.Object);
+                _apiServiceMock.Object,
+                _dropdownOptionsServiceMock.Object);
         }
 
         // Mocked response - happy path with anonymous user
@@ -40,6 +43,7 @@ namespace Metal_Mate_MVC.Tests
         public async Task Index_Anonymous_ReturnsAViewResult()
         {
             // Arrange
+            // Mock the controller context to simulate an anonymous user
             _controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext {User = new ClaimsPrincipal(new ClaimsIdentity())}
@@ -60,14 +64,10 @@ namespace Metal_Mate_MVC.Tests
                     Price = 3500.00f
                 });
 
-            // Mock the API service to return a valid list of metals
-            _apiServiceMock
-             .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-             .ReturnsAsync(new List<Metal>
-             {
-                 new Metal { Name = "Silver", Symbol = "XAG" },
-                 new Metal { Name = "Gold", Symbol = "XAU" }
-             });
+            // Mock the Dropdown Options service to return a successful run
+            _dropdownOptionsServiceMock
+                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
+                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _controller.Index();
@@ -80,8 +80,11 @@ namespace Metal_Mate_MVC.Tests
             Assert.Equal("EUR", model.SelectedCurrency);
             Assert.NotNull(model.SpotPrice);
             Assert.Equal("Gold", model.SpotPrice.Name);
-            Assert.NotNull(model.Metals);
-            Assert.Equal("Gold", model.Metals.ElementAt(1).Text);
+            Assert.Empty(model.ErrorMessage);
+
+            _dropdownOptionsServiceMock.Verify(
+                s => s.PopulateAsync(It.IsAny<HomeViewModel>()),
+                Times.Once());
         }
 
         // Mocked response - happy path with authenticated user
@@ -120,7 +123,7 @@ namespace Metal_Mate_MVC.Tests
                 .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/XAG/USD"))
                 .ReturnsAsync(new SpotPrice
                 {
-                    Name = "Gold",
+                    Name = "Silver",
                     UpdatedAtReadable = "a few minutes ago",
                     UpdatedAt = DateTime.UtcNow,
                     CurrencySymbol = "$",
@@ -130,14 +133,10 @@ namespace Metal_Mate_MVC.Tests
                     Price = 60.00f
                 });
 
-            // Mock the API service to return a valid list of metals
-            _apiServiceMock
-             .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-             .ReturnsAsync(new List<Metal>
-             {
-                 new Metal { Name = "Silver", Symbol = "XAG" },
-                 new Metal { Name = "Gold", Symbol = "XAU" }
-             });
+            // Mock the Dropdown Options service to return a successful run
+            _dropdownOptionsServiceMock
+                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
+                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _controller.Index();
@@ -148,9 +147,12 @@ namespace Metal_Mate_MVC.Tests
             Assert.Equal("XAG", model.SelectedMetal);
             Assert.Equal("USD", model.SelectedCurrency);
             Assert.NotNull(model.SpotPrice);
-            Assert.Equal("Gold", model.SpotPrice.Name);
-            Assert.NotNull(model.Metals);
-            Assert.Equal("Gold", model.Metals.ElementAt(1).Text);
+            Assert.Equal("Silver", model.SpotPrice.Name);
+            Assert.Empty(model.ErrorMessage);
+
+            _dropdownOptionsServiceMock.Verify(
+                s => s.PopulateAsync(It.IsAny<HomeViewModel>()),
+                Times.Once);
         }
 
         // Mocked response - Exception thrown while fetching the user profile for an authenticated user
@@ -158,6 +160,11 @@ namespace Metal_Mate_MVC.Tests
         public async Task Index_Authenticated_ReturnsAViewResultAndException()
         {
             // Arrange
+            // Mock the Dropdown Options service to complete successfully
+            _dropdownOptionsServiceMock
+                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
+                .Returns(Task.CompletedTask);
+
             // Set up a mock user for the controller context
             var user = new ClaimsPrincipal(new ClaimsIdentity(
             new[]
@@ -193,15 +200,6 @@ namespace Metal_Mate_MVC.Tests
                     Price = 3500.00f
                 });
 
-            // Mock the API service to return a valid list of metals
-            _apiServiceMock
-             .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-             .ReturnsAsync(new List<Metal>
-             {
-                 new Metal { Name = "Silver", Symbol = "XAG" },
-                 new Metal { Name = "Gold", Symbol = "XAU" }
-             });
-
             // Act
             var result = await _controller.Index();
 
@@ -212,13 +210,16 @@ namespace Metal_Mate_MVC.Tests
             Assert.Equal("EUR", model.SelectedCurrency);
             Assert.NotNull(model.SpotPrice);
             Assert.Equal("Gold", model.SpotPrice.Name);
-            Assert.NotNull(model.Metals);
-            Assert.Equal("Gold", model.Metals.ElementAt(1).Text);
+
             Assert.Equal("Apologies, your profile information is currently unavailable so your favourite selections cannot be defaulted. " +
                 "Please use the dropdowns above.", model.ErrorMessage);
+
+            _dropdownOptionsServiceMock.Verify(
+                s => s.PopulateAsync(It.IsAny<HomeViewModel>()),
+                Times.Once);
         }
 
-        // Mocked response - Exception thrown from the API service while retrieving the SpotPrice and list of metals
+        // Mocked response - Exception thrown from the API service while retrieving the SpotPrice 
         [Fact]
         public async Task Index_ReturnsAnErrorResult()
         {
@@ -226,13 +227,13 @@ namespace Metal_Mate_MVC.Tests
 
             // Mock the API service to return an exception when trying to get the SpotPrice
             _apiServiceMock
-                .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/XAU/USD"))
+                .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/XAU/EUR"))
                 .ThrowsAsync(new Exception("An error ocurred"));
 
-            // Mock the API service to return an exception when trying to get the list of metals
-            _apiServiceMock
-                .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-                .ThrowsAsync(new Exception("An error ocurred"));
+            // Mock the Dropdown Options service to return a successful run
+            _dropdownOptionsServiceMock
+                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
+                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _controller.Index();
@@ -242,8 +243,11 @@ namespace Metal_Mate_MVC.Tests
             var model = Assert.IsType<HomeViewModel>(viewResult.Model);
 
             Assert.Null(model.SpotPrice);
-            Assert.Null(model.Metals);
             Assert.Equal("The price site is unavailable at the moment. Please try again later.", model.ErrorMessage);
+
+            _dropdownOptionsServiceMock.Verify(
+                s => s.PopulateAsync(It.IsAny<HomeViewModel>()),
+                Times.Once);
         }
 
         // Mocked response - Happy path for the GetSpotPriceAsync Method 
@@ -266,15 +270,6 @@ namespace Metal_Mate_MVC.Tests
                     Price = 3500.00f
                 });
 
-            // Mock the API service to return a valid list of metals
-            _apiServiceMock
-             .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-             .ReturnsAsync(new List<Metal>
-             {
-                 new Metal { Name = "Silver", Symbol = "XAG" },
-                 new Metal { Name = "Gold", Symbol = "XAU" }
-             });
-
             // Act
             var result = await _controller.GetSpotPriceAsync("XAU","EUR");
 
@@ -284,7 +279,6 @@ namespace Metal_Mate_MVC.Tests
             Assert.NotNull(response);
             Assert.Equal(3500.00f,response.Price);
             Assert.Equal("€", response.CurrencySymbol);
-
         }
 
         // Mocked response - Exception thrown from the service while calling the GetSpotPriceAsync Method       
@@ -296,11 +290,6 @@ namespace Metal_Mate_MVC.Tests
             // Mock the API service to return an exception when trying to get the SpotPrice
             _apiServiceMock
                 .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/XAU/USD"))
-                .ThrowsAsync(new Exception("An error ocurred"));
-
-            // Mock the API service to return an exception when trying to get the list of metals
-            _apiServiceMock
-                .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
                 .ThrowsAsync(new Exception("An error ocurred"));
 
             // Act
@@ -317,7 +306,6 @@ namespace Metal_Mate_MVC.Tests
                 .GetValue(objectResult.Value); 
 
             Assert.Equal("The price site is unavailable at the moment. Please try again later.", message);
-
         }
     }
 }
