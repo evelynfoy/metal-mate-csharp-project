@@ -1,11 +1,9 @@
-using Metal_Mate_MVC.DTOs;
 using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Models.ViewModels;
 using Metal_Mate_MVC.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 
 namespace Metal_Mate_MVC.Controllers
 {
@@ -48,8 +46,7 @@ namespace Metal_Mate_MVC.Controllers
                     return View(model);
                 }
 
-                model.AlertRequests =
-                    await _alertRequestService.GetForUserAsync(user.Id);
+                model.AlertRequests = await _alertRequestService.GetForUserAsync(user.Id);
 
                 var metals = await _ApiService.GetAPIDataAsync<List<Metal>>("symbols");
                 
@@ -327,7 +324,6 @@ namespace Metal_Mate_MVC.Controllers
             }
 
             return View(model);
-
         }
 
         // POST: AlertRequests/Delete/5
