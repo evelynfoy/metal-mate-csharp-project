@@ -2,12 +2,78 @@
 using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Tests.Integration.Infrastructure;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Metal_Mate_MVC.Tests.Integration.Controllers
 {
     public class AlertRequestsControllerIntegrationTests
     {
+
+        [Fact]
+        public async Task Index_AnonymousUser_ReturnsUnauthorised()
+        {
+            // Arrange
+            using var factory = new CustomWebApplicationFactory();
+
+            var client = factory.CreateClient(
+                new WebApplicationFactoryClientOptions
+                {
+                    AllowAutoRedirect = false
+                });
+
+            // Act
+            var response = await client.GetAsync(
+                "/AlertRequests/",
+                TestContext.Current.CancellationToken);
+
+            // Assert
+            Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+
+        }
+
+        [Fact]
+        public async Task Index_AuthenticatedUser_ReturnsSuccessful()
+        {
+            // Arrange
+            // Setup the test server and create a test user
+            using var factory = new CustomWebApplicationFactory();
+            using var scope = factory.Services.CreateScope();
+
+            var userManager = scope.ServiceProvider
+                .GetRequiredService<UserManager<ApplicationUser>>();
+
+            var user = new ApplicationUser
+            {
+                UserName = "test@test.com",
+                Email = "test@test.com",
+                EmailConfirmed = true,
+                FirstName = "John",
+                LastName = "Smith",
+                FavouriteCurrency = "USD",
+                FavouriteMetal = "XAU"
+            };
+
+            var userCreated = await userManager.CreateAsync(user, "Password123!");
+
+            var client = factory.CreateClient();
+
+            client.DefaultRequestHeaders.Add(
+                "X-Test-UserId",
+                user.Id);
+
+            // Act
+            var response = await client.GetAsync(
+                "/AlertRequests/",
+                TestContext.Current.CancellationToken);
+
+            // Assert
+            Assert.True(userCreated.Succeeded);
+            Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+
+        }
+
+
         // Tests that the Get action of the AlertRequestsController allows
         // a user to view their own alert request details.
         [Fact]
@@ -355,5 +421,6 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
             Assert.DoesNotContain(html, "<dl class=\"row mt-5\">");
         }
 
+        
     }
 }
