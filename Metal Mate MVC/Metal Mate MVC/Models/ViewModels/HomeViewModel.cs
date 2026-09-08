@@ -1,29 +1,25 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Metal_Mate_MVC.DTOs;
 
-/* 
- * Takes the list of metals returned from the API and converts it into 
- * a list of SelectListItem objects for the dropdown in the view.
- * Similarily, the list of currencies is also converted into a list of SelectListItem objects.
- */
 namespace Metal_Mate_MVC.Models.ViewModels
 {
-    public class HomeViewModel
+    public class HomeViewModel : ICommonSelectLists
     {
-        public SpotPrice? GoldSpotPrice { get; set; }
-        public SpotPrice? SilverSpotPrice { get; set; }
-        public SpotPrice? PlatinumSpotPrice { get; set; }
+        public SpotPrice? GoldSpotPrice { get; set; } = null;
+        public SpotPrice? SilverSpotPrice { get; set; } = null;
+        public SpotPrice? PlatinumSpotPrice { get; set; } = null;
 
         public SpotPrice? SpotPrice { get; set; }
 
         [Display(Name = "Metal")]
-        public string? SelectedMetal { get; set; }
-        public IEnumerable<SelectListItem>? Metals { get; set; }
+        public string SelectedMetal { get; set; } = string.Empty;
+        public IEnumerable<SelectListItem> Metals { get; set; } = Enumerable.Empty<SelectListItem>();
 
         [Display(Name = "Currencies")]
-        public string? SelectedCurrency { get; set; }
-        public IEnumerable<SelectListItem>? Currencies { get; set; }
+        public string SelectedCurrency { get; set; } = string.Empty;
+        public IEnumerable<SelectListItem> Currencies { get; set; } = Enumerable.Empty<SelectListItem>();
 
-        public string? ErrorMessage { get; set; }
+        public string ErrorMessage { get; set; } = string.Empty;
     }
 }

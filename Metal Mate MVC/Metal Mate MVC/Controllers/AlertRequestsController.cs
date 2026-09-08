@@ -1,35 +1,33 @@
-using Metal_Mate_MVC.Data;
 using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Models.ViewModels;
+using Metal_Mate_MVC.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Metal_Mate_MVC.Services;
 
 namespace Metal_Mate_MVC.Controllers
 {
     [Authorize]
     public class AlertRequestsController : Controller
     {
-        private readonly ApplicationDbContext _context;
         private readonly ILogger<AlertRequestsController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IAlertRequestService _alertRequestService;
-        private readonly IApiService _apiService;
+        private readonly IDropdownOptionsService _dropdownOptionsService;
+        private readonly IApiService _ApiService;
 
-        public AlertRequestsController(ApplicationDbContext context,
-                                       ILogger<AlertRequestsController> logger,
+
+        public AlertRequestsController(ILogger<AlertRequestsController> logger,
                                        UserManager<ApplicationUser> userManager,
                                        IAlertRequestService alertRequestService,
+                                       IDropdownOptionsService dropdownOptionsService,
                                        IApiService apiService)
         {
-            _context = context;
             _logger = logger;
             _userManager = userManager;
             _alertRequestService = alertRequestService;
-            _apiService = apiService;
+            _dropdownOptionsService = dropdownOptionsService;
+            _ApiService = apiService;
         }
 
         // GET: AlertRequests
@@ -48,10 +46,11 @@ namespace Metal_Mate_MVC.Controllers
                     return View(model);
                 }
 
-                model.AlertRequests =
-                    await _alertRequestService.GetForUserAsync(user.Id);
+                model.AlertRequests = await _alertRequestService.GetForUserAsync(user.Id);
 
+                var metals = await _ApiService.GetAPIDataAsync<List<Metal>>("symbols");
                 
+                model.MetalNames = metals.ToDictionary(m => m.Symbol, m => m.Name);
             }
             catch (Exception ex)
             {
@@ -115,24 +114,12 @@ namespace Metal_Mate_MVC.Controllers
 
             try
             {
-                var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
-                model.Metals = metals.Select(x => new SelectListItem
-                {
-                    Value = x.Name.ToString(),
-                    Text = x.Name.ToString()
-                });
-                string[] currencies = ["EUR", "AUD", "BRL", "CAD", "CHF", "CNY", "DKK", "GBP", "HKD", "INR", "JPY", "KRW", 
-                    "MXN", "NOK", "NZD", "SEK", "SGD", "USD", "ZAR"];
-                model.Currencies = currencies.Select(c => new SelectListItem
-                {
-                    Value = c,
-                    Text = c
-                });
+                await _dropdownOptionsService.PopulateAsync(model);
             }
             catch (Exception ex) 
             {
                 _logger.LogError(ex, "An error occurred while fetching data for the page." + ex.Message);
-                model.ErrorMessage = "There was a problem retrieving the informationfor this page. Please try again later.";
+                model.ErrorMessage = "There was a problem retrieving the information for this page. Please try again later.";
             }
 
             return View(model);
@@ -159,8 +146,6 @@ namespace Metal_Mate_MVC.Controllers
                     return View(model);
                 }
 
-                var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
-
                 var alertRequest = new AlertRequest
                 {
                     Metal = model.Metal,
@@ -168,11 +153,9 @@ namespace Metal_Mate_MVC.Controllers
                     Operator = model.Operator,
                     Value = model.Value,
                     IsEnabled = model.IsEnabled,
-                    UserId = user.Id
+                    UserId = user.Id,
+                    User = user
                 };
-
-                alertRequest.UserId = user.Id;
-                alertRequest.User = user;
 
                 await _alertRequestService.AddAsync(alertRequest);
                 return RedirectToAction(nameof(Index));
@@ -224,19 +207,7 @@ namespace Metal_Mate_MVC.Controllers
                 model.Operator = alertRequest.Operator;
                 model.IsEnabled = alertRequest.IsEnabled;
 
-                var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
-                model.Metals = metals.Select(x => new SelectListItem
-                {
-                    Value = x.Name.ToString(),
-                    Text = x.Name.ToString()
-                });
-                string[] currencies = ["EUR", "AUD", "BRL", "CAD", "CHF", "CNY", "DKK", "GBP", "HKD", "INR", "JPY", "KRW",
-                    "MXN", "NOK", "NZD", "SEK", "SGD", "USD", "ZAR"];
-                model.Currencies = currencies.Select(c => new SelectListItem
-                {
-                    Value = c,
-                    Text = c
-                });
+                await _dropdownOptionsService.PopulateAsync(model);
 
             }
             catch (Exception ex)
@@ -353,7 +324,6 @@ namespace Metal_Mate_MVC.Controllers
             }
 
             return View(model);
-
         }
 
         // POST: AlertRequests/Delete/5
@@ -387,11 +357,6 @@ namespace Metal_Mate_MVC.Controllers
             }
             return View(model);
 
-        }
-
-        private bool AlertRequestExists(int id)
-        {
-            return _context.AlertRequests.Any(e => e.Id == id);
         }
     }
 }

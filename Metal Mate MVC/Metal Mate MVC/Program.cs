@@ -22,6 +22,8 @@ builder.Services.AddHttpClient<IApiService, ApiService>(client =>
 
 builder.Services.AddScoped<IAlertRequestService, AlertRequestService>();
 
+builder.Services.AddScoped<IDropdownOptionsService, DropdownOptionsService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

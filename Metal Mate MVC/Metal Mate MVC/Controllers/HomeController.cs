@@ -5,8 +5,6 @@ using Metal_Mate_MVC.Models.ViewModels;
 using Metal_Mate_MVC.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.CodeAnalysis;
 using System.Diagnostics;
 
 
@@ -17,59 +15,39 @@ namespace Metal_Mate_MVC.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IApiService _apiService;
+        private readonly IDropdownOptionsService _dropdownOptionsService;
 
         public HomeController(ILogger<HomeController> logger,
                               UserManager<ApplicationUser> userManager, 
-                              IApiService apiService)
+                              IApiService apiService,
+                              IDropdownOptionsService dropdownOptionsService)
         {
             _logger = logger;
             _userManager = userManager;
             _apiService = apiService;
+            _dropdownOptionsService = dropdownOptionsService;
         }
 
         /* 
          * This action method does the following :-
-         *    1) It retrieves the list of metals supported from the API and populates the metals dropdown. 
-         *    2) It populates the currencies dropdown from an array.
-         *    3) If a user is logged in it retrieves their favourite metal and currency values and uses them to set the initial value of 
+         *    1) It calls the DropdownOptionsService to populate the metals and currencies dropdowns.
+         *    2) If a user is logged in it retrieves their favourite metal and currency values and uses them to set the initial value of 
          *       the selected metal and currency fields.
-         *    4) If the user has changed their favourites from Gold and Euro then the gold euro price needs to be retrieved as well
+         *    3) If the user has changed their favourites from Gold and Euro then the gold euro price needs to be retrieved as well
          *        as the spot price for the selected metal and currency.
-         *    5) It also retrieves the silver and platinum euro prices for display in the view.
+         *    4) It also retrieves the silver and platinum euro prices for display in the view.
          */
         public async Task<IActionResult> Index()
         {
             const string gold = "XAU";
             const string euro = "EUR";
 
-            var model = new HomeViewModel
-            {
-                SilverSpotPrice = null,
-                PlatinumSpotPrice = null,
-                SpotPrice = null,
-                Metals = null,
-                SelectedMetal = null,
-                Currencies = null,
-                SelectedCurrency = null,
-                ErrorMessage = null
-            };
+            var model = new HomeViewModel();
 
             try
             {
-                string[] currencies = ["EUR", "AUD", "BRL", "CAD", "CHF", "CNY", "DKK", "GBP", "HKD", "INR", "JPY", "KRW", "MXN", "NOK", "NZD", "SEK", "SGD", "USD", "ZAR"];
-                model.Currencies = currencies.Select(c => new SelectListItem
-                {
-                    Value = c,
-                    Text = c
-                });
+                await _dropdownOptionsService.PopulateAsync(model);
                 model.SelectedCurrency = euro;
-
-                var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
-                model.Metals = metals.Select(x => new SelectListItem
-                {
-                    Value = x.Symbol.ToString(),
-                    Text = x.Name.ToString()
-                });
                 model.SelectedMetal = gold;
 
                 await SetUserPreferencesAsync(model);

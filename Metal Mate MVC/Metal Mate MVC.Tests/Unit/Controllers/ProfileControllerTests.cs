@@ -19,7 +19,7 @@ namespace Metal_Mate_MVC.Tests
 
         private readonly Mock<ILogger<ProfileController>> _loggerMock;
         private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
-        private readonly Mock<IApiService> _apiServiceMock;
+        private readonly Mock<IDropdownOptionsService> _dropdownOptionsServiceMock;
 
         private readonly ProfileController _controller;
 
@@ -32,7 +32,7 @@ namespace Metal_Mate_MVC.Tests
             _loggerMock = new Mock<ILogger<ProfileController>>();
             _userManagerMock = new Mock<UserManager<ApplicationUser>>(
                                Mock.Of<IUserStore<ApplicationUser>>(), null, null, null, null, null, null, null, null);
-            _apiServiceMock = new Mock<IApiService>();
+            _dropdownOptionsServiceMock = new Mock<IDropdownOptionsService>();
 
             // Set up a mock user for the controller context
             var user = new ClaimsPrincipal(new ClaimsIdentity(
@@ -47,7 +47,7 @@ namespace Metal_Mate_MVC.Tests
             _controller = new ProfileController(
                 _loggerMock.Object,
                 _userManagerMock.Object,
-                _apiServiceMock.Object);
+                _dropdownOptionsServiceMock.Object);
 
             _controller.ControllerContext = new ControllerContext
             { 
@@ -71,14 +71,10 @@ namespace Metal_Mate_MVC.Tests
                     FavouriteCurrency = "USD"
                 });
 
-            // Mock the API service to return a valid list of metals
-            _apiServiceMock
-             .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
-             .ReturnsAsync(new List<Metal>
-             {
-                 new Metal { Name = "Silver", Symbol = "XAG" },
-                 new Metal { Name = "Gold", Symbol = "XAU" }
-             });
+            // Mock the Dropdown options service to complete successfully when PopulateAsync is called.
+            _dropdownOptionsServiceMock
+                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
+                .Returns(Task.CompletedTask);
 
             // Act
             var result = await _controller.Edit();
@@ -89,10 +85,10 @@ namespace Metal_Mate_MVC.Tests
             var model = Assert.IsType<EditProfileViewModel>(viewResult.Model);
             Assert.NotNull(model.FirstName);
             Assert.Equal("John", model.FirstName);
-            Assert.NotNull(model.Metals);
-            Assert.Equal("Gold", model.Metals.ElementAt(1).Text);
-            Assert.NotNull(model.Currencies);
-            Assert.Equal("AUD", model.Currencies.ElementAt(1).Text);
+
+            _dropdownOptionsServiceMock.Verify(
+                s => s.PopulateAsync(It.IsAny<EditProfileViewModel>()),
+                Times.Once);
         }
 
         // Mocked response - Exception thrown from the service when calling the GetAPIDataAsync Method for metals
@@ -100,10 +96,11 @@ namespace Metal_Mate_MVC.Tests
         public async Task Edit_ReturnsAnErrorResult()
         {
             // Arrange
+            var model = new EditProfileViewModel();
 
-            // Mock the API service to return an exception when trying to get the list of metals
-            _apiServiceMock
-                .Setup(s => s.GetAPIDataAsync<List<Metal>>("symbols"))
+            // Mock the dropdown options service to return an exception
+            _dropdownOptionsServiceMock
+                .Setup(s => s.PopulateAsync(It.IsAny<EditProfileViewModel>()))
                 .ThrowsAsync(new Exception("An error ocurred"));
 
             // Mock the user manager to return a valid application user when GetUserAsync is called. 
@@ -123,10 +120,9 @@ namespace Metal_Mate_MVC.Tests
             // Assert
             Assert.NotNull(result);
             var viewResult = Assert.IsType<ViewResult>(result);
-            var model = Assert.IsType<EditProfileViewModel>(viewResult.Model);
+            model = Assert.IsType<EditProfileViewModel>(viewResult.Model);
 
             Assert.NotNull(model.ErrorMessage);
-            Assert.Null(model.Metals);
             Assert.Equal("Your profile information is temporarily unavailable. Please try again later.", model.ErrorMessage);
 
         }
@@ -156,7 +152,7 @@ namespace Metal_Mate_MVC.Tests
                 .Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>()))
                 .ReturnsAsync(IdentityResult.Success);
 
-            var controller = new ProfileController(_loggerMock.Object, _userManagerMock.Object, _apiServiceMock.Object);
+            var controller = new ProfileController(_loggerMock.Object, _userManagerMock.Object, _dropdownOptionsServiceMock.Object);
 
             // Give controller a HttpContext with an authenticated user
             var claims = new[] { new Claim(ClaimTypes.NameIdentifier, testUser.Id) };
@@ -220,19 +216,6 @@ namespace Metal_Mate_MVC.Tests
                 .Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>()))
                 .ThrowsAsync(new Exception("An error ocurred"));
 
-            var controller = new ProfileController(_loggerMock.Object, _userManagerMock.Object, _apiServiceMock.Object);
-
-            // Give controller a HttpContext with an authenticated user
-            var claims = new[] { new Claim(ClaimTypes.NameIdentifier, testUser.Id) };
-            var identity = new ClaimsIdentity(claims, "TestAuth");
-            var principal = new ClaimsPrincipal(identity);
-            var httpContext = new DefaultHttpContext { User = principal };
-
-            controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = httpContext
-            };
-
             // Prepare a model with changed data to simulate a user editing their profile
             var model = new EditProfileViewModel
             {
@@ -245,7 +228,7 @@ namespace Metal_Mate_MVC.Tests
             };
 
             // Act
-            var result = await controller.Edit(model);
+            var result = await _controller.Edit(model);
 
             // Assert
             Assert.NotNull(result);

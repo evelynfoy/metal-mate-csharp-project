@@ -4,25 +4,23 @@ using Metal_Mate_MVC.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Metal_Mate_MVC.Controllers
 {
-
     [Authorize]
     public class ProfileController : Controller
     {
         private readonly ILogger<ProfileController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IApiService _apiService;
+        private readonly IDropdownOptionsService _dropdownOptionsService;
 
         public ProfileController(ILogger<ProfileController> logger, 
             UserManager<ApplicationUser> userManager,
-            IApiService apiService)
+            IDropdownOptionsService dropdownOptionsService)
         {
             _logger = logger;
             _userManager = userManager;
-            _apiService = apiService;
+            _dropdownOptionsService = dropdownOptionsService;
         }
 
         // Display the profile and the populated dropdowns for metals and currencies
@@ -30,46 +28,27 @@ namespace Metal_Mate_MVC.Controllers
         public async Task<IActionResult> Edit()
         {
 
-            var model = new EditProfileViewModel
-            {
-                FirstName = string.Empty,
-                LastName = string.Empty,
-                FavouriteMetal = string.Empty,
-                FavouriteCurrency = string.Empty,
-                Metals = null,
-                Currencies = null,
-            };
+            var model = new EditProfileViewModel();
 
-            // Get the current logged-in user
             try
             {
+                // Get the current logged-in user
                 var user = await _userManager.GetUserAsync(User);
-                var metals = await _apiService.GetAPIDataAsync<List<Metal>>("symbols");
-                // Map to a view model
+
                 if (user == null)
                 {
                     _logger.LogError("The user is null. User: {UserName}", User.Identity?.Name);
                     model.ErrorMessage = "Your profile information is temporarily unavailable. Please try again later.";
                     return View(model);
                 }
-                model = new EditProfileViewModel
-                {
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    FavouriteMetal = user.FavouriteMetal,
-                    FavouriteCurrency = user.FavouriteCurrency,
-                };
-                model.Metals = metals.Select(x => new SelectListItem
-                {
-                    Value = x.Symbol.ToString(),
-                    Text = x.Name.ToString()
-                });
-                string[] currencies = ["EUR", "AUD", "BRL", "CAD", "CHF", "CNY", "DKK", "GBP", "HKD", "INR", "JPY", "KRW", "MXN", "NOK", "NZD", "SEK", "SGD", "USD", "ZAR"];
-                model.Currencies = currencies.Select(c => new SelectListItem
-                {
-                    Value = c,
-                    Text = c
-                });
+
+                // Map to view model
+                model.FirstName = user.FirstName;
+                model.LastName = user.LastName;
+                model.FavouriteMetal = user.FavouriteMetal;
+                model.FavouriteCurrency = user.FavouriteCurrency;
+
+                await _dropdownOptionsService.PopulateAsync(model);
             }
             catch (Exception ex)
             {
@@ -96,6 +75,7 @@ namespace Metal_Mate_MVC.Controllers
                     return View(model);
                 }
 
+                // Map from view model
                 user.FirstName = model.FirstName;
                 user.LastName = model.LastName;
                 user.FavouriteCurrency = model.FavouriteCurrency;
