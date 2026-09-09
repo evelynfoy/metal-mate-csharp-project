@@ -60,6 +60,7 @@ namespace Metal_Mate_MVC.Controllers
 
         // Save changes
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit( EditProfileViewModel model)
         {
             if (!ModelState.IsValid)
