@@ -62,7 +62,7 @@ public sealed class SetUpTestDB : IAsyncDisposable
         await Connection.DisposeAsync();
     }
 
-    private static ApplicationUser CreateUser(int number)
+    public static ApplicationUser CreateUser(int number)
     {
         return new ApplicationUser
         {

@@ -34,7 +34,6 @@ namespace Metal_Mate_MVC.Controllers
             {
                 // Get the current logged-in user
                 var user = await _userManager.GetUserAsync(User);
-
                 if (user == null)
                 {
                     _logger.LogError("The user is null. User: {UserName}", User.Identity?.Name);
@@ -47,12 +46,11 @@ namespace Metal_Mate_MVC.Controllers
                 model.LastName = user.LastName;
                 model.FavouriteMetal = user.FavouriteMetal;
                 model.FavouriteCurrency = user.FavouriteCurrency;
-
                 await _dropdownOptionsService.PopulateAsync(model);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An error occurred while fetching data for the page." + ex.Message);
+                _logger.LogError(ex, "An error occurred while fetching data for the page.");
                 model.ErrorMessage = "Your profile information is temporarily unavailable. Please try again later.";
             }
             return View(model);
@@ -60,6 +58,7 @@ namespace Metal_Mate_MVC.Controllers
 
         // Save changes
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit( EditProfileViewModel model)
         {
             if (!ModelState.IsValid)
@@ -97,7 +96,7 @@ namespace Metal_Mate_MVC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating user profile. {error}", ex.Message);
+                _logger.LogError(ex, "Error updating user profile. User: {UserName}", User.Identity?.Name);
                 model.ErrorMessage = "An error occurred while updating your profile. Please try again later.";
                 return View(model);
             }

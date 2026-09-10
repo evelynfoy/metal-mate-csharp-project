@@ -1,4 +1,5 @@
-﻿using Metal_Mate_MVC.Models;
+﻿using AngleSharp;
+using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Tests.Integration.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -10,7 +11,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
     {
 
         [Fact]
-        public async Task Edit_Get_Returns_Profile_For_Authenticated_User()
+        public async Task Edit_Get_ReturnsProfileForAuthenticated_User()
         {
             // Arrange
             // Setup the test server and create a test user
@@ -19,7 +20,6 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
 
             var userManager = scope.ServiceProvider
                 .GetRequiredService<UserManager<ApplicationUser>>();
-
 
             var user = new ApplicationUser
             {
@@ -32,7 +32,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
                 FavouriteMetal = "XAU"
             };
 
-            await userManager.CreateAsync(user, "Password123!");
+            var userCreated = await userManager.CreateAsync(user, "Password123!");
 
             var client = factory.CreateClient();
 
@@ -42,7 +42,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
 
             // Act
             var response = await client.GetAsync(
-                "/Profile/Edit", 
+                "/Profile/Edit",
                 TestContext.Current.CancellationToken);
 
             // Assert
@@ -51,8 +51,15 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
             var html = await response.Content.ReadAsStringAsync(
                 TestContext.Current.CancellationToken);
 
+            // Verify that the user was created successfully
+            Assert.True(userCreated.Succeeded);
+
+            // Verify that the response contains the user's profile information
             Assert.Contains("John", html);
             Assert.Contains("Smith", html);
+
+            // Error is NOT displayed
+            Assert.DoesNotContain(html, "<div id=\"errorMessage\" class=\"alert alert-danger\">");
         }
 
         [Fact]
@@ -85,6 +92,12 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
                 "X-Test-UserId",
                 user.Id);
 
+            // If the antiforgery token is not included in the POST request, the server will reject the request
+            // with a 400 Bad Request response.
+            var token = await GetTokenAsync(client,
+                                            "/Profile/Edit",
+                                            TestContext.Current.CancellationToken);
+
             // Prepare the form data for the POST request
             var model = new Dictionary<string, string>
             {
@@ -92,6 +105,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
                 ["LastName"] = "Doe",
                 ["FavouriteCurrency"] = "EUR",
                 ["FavouriteMetal"] = "XAU",
+                ["__RequestVerificationToken"] = token
             };
 
             // Create the form content
@@ -99,12 +113,15 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
 
             // Act
             var response = await client.PostAsync("/Profile/Edit",
-                                                    content,
-                                                    TestContext.Current.CancellationToken);
+                                                   content,
+                                                   TestContext.Current.CancellationToken);
 
             // Assert
+            response.EnsureSuccessStatusCode();
+
             var html = await response.Content.ReadAsStringAsync(
                         TestContext.Current.CancellationToken);
+
             Assert.Contains("Profile updated successfully.", html);
 
             // Verify that the user's profile was updated in the database
@@ -124,7 +141,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
         }
 
         [Fact]
-        public async Task Edit_Get_Redirects_Anonymous_User_To_Login()
+        public async Task Edit_Get_RedirectsAnonymousUserToLogin()
         {
             // Arrange
             using var factory = new CustomWebApplicationFactory();
@@ -145,5 +162,27 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
 
         }
 
+        //---------------------------------------------------------------------------------------------------------
+        // Uses AngleSharp to parse the HTML and extract the antiforgery token from the form.
+        // AngleSharp exposes the DOM of the HTML document, allowing you to query for elements and attributes.
+        //---------------------------------------------------------------------------------------------------------
+
+        public static async Task<string> GetTokenAsync(HttpClient client,
+                                                       string url,
+                                                       CancellationToken cancellationToken = default)
+        {
+            var response = await client.GetAsync(url, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var html = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            var context = BrowsingContext.New(Configuration.Default);
+            var document = await context.OpenAsync(req => req.Content(html), 
+                                                   cancellationToken);
+
+            var token = document.QuerySelector("input[name='__RequestVerificationToken']")?.GetAttribute("value");
+
+            return token ?? throw new InvalidOperationException("Antiforgery token was not found.");
+        }
     }
 }

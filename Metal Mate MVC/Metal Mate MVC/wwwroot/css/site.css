@@ -18,7 +18,7 @@ html {
     border-color: var(--copper);
 }
 
-.form-check-input:checked {
+.form-check-input:checked, .dropdown-item:active, .nav-pills .nav-link.active {
     background-color: var(--copper);
     border-color: var(--dark-grey);
 }
@@ -49,13 +49,13 @@ main {
     color: var(--copper);
 }
 
-a {
+a, .nav-link {
     color: var(--copper);
 }
 
-a:hover {
+a:hover, .nav-link:hover {
     color: var(--copper);
-    font-weight:500;
+    font-weight: 500;
 }
 
 .alert-success {

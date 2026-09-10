@@ -60,7 +60,7 @@ namespace Metal_Mate_MVC.Areas.Identity.Pages.Account
             }
 
             Email = email;
-            // Once you add a real email sender, you should remove this code that lets you confirm the account
+            // Sets the DisplayConfirmAccountLink property to true. This displays the link to confirm the account on the RegisterConfirmation page.
             DisplayConfirmAccountLink = true;
             if (DisplayConfirmAccountLink)
             {

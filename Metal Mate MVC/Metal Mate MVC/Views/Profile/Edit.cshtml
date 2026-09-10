@@ -6,7 +6,7 @@
 
 <!-- Breadcrumb column -->
 <div>
-    <a class="link" href="/">Home</a>> User Profile
+    <a class="link" href="/">Home</a>> My Profile
 </div>
 
 <!-- Heading Area -->
@@ -14,11 +14,8 @@
     <h1>Edit Profile</h1>
 </header>
 
-<!-- Display form only if metals and currency lists are populated 
-     and user profile has been retrieved without error                 -->
-@if (Model?.Metals != null || 
-     Model?.Currencies != null || 
-     string.IsNullOrEmpty(Model?.ErrorMessage))
+<!-- Display form only if error message is blank -->
+@if (string.IsNullOrEmpty(Model?.ErrorMessage))
 {
     @if (TempData["Success"] != null)
     {
