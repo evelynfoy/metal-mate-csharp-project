@@ -1,4 +1,5 @@
-﻿using Metal_Mate_MVC.Models;
+﻿using AngleSharp;
+using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Tests.Integration.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -41,7 +42,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
 
             // Act
             var response = await client.GetAsync(
-                "/Profile/Edit", 
+                "/Profile/Edit",
                 TestContext.Current.CancellationToken);
 
             // Assert
@@ -91,6 +92,12 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
                 "X-Test-UserId",
                 user.Id);
 
+            // If the antiforgery token is not included in the POST request, the server will reject the request
+            // with a 400 Bad Request response.
+            var token = await GetTokenAsync(client,
+                                            "/Profile/Edit",
+                                            TestContext.Current.CancellationToken);
+
             // Prepare the form data for the POST request
             var model = new Dictionary<string, string>
             {
@@ -98,6 +105,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
                 ["LastName"] = "Doe",
                 ["FavouriteCurrency"] = "EUR",
                 ["FavouriteMetal"] = "XAU",
+                ["__RequestVerificationToken"] = token
             };
 
             // Create the form content
@@ -105,12 +113,15 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
 
             // Act
             var response = await client.PostAsync("/Profile/Edit",
-                                                    content,
-                                                    TestContext.Current.CancellationToken);
+                                                   content,
+                                                   TestContext.Current.CancellationToken);
 
             // Assert
+            response.EnsureSuccessStatusCode();
+
             var html = await response.Content.ReadAsStringAsync(
                         TestContext.Current.CancellationToken);
+
             Assert.Contains("Profile updated successfully.", html);
 
             // Verify that the user's profile was updated in the database
@@ -151,5 +162,27 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
 
         }
 
+        //---------------------------------------------------------------------------------------------------------
+        // Uses AngleSharp to parse the HTML and extract the antiforgery token from the form.
+        // AngleSharp exposes the DOM of the HTML document, allowing you to query for elements and attributes.
+        //---------------------------------------------------------------------------------------------------------
+
+        public static async Task<string> GetTokenAsync(HttpClient client,
+                                                       string url,
+                                                       CancellationToken cancellationToken = default)
+        {
+            var response = await client.GetAsync(url, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var html = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            var context = BrowsingContext.New(Configuration.Default);
+            var document = await context.OpenAsync(req => req.Content(html), 
+                                                   cancellationToken);
+
+            var token = document.QuerySelector("input[name='__RequestVerificationToken']")?.GetAttribute("value");
+
+            return token ?? throw new InvalidOperationException("Antiforgery token was not found.");
+        }
     }
 }
