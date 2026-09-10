@@ -46,22 +46,9 @@ namespace Metal_Mate_MVC.Controllers
 
             try
             {
-                await _dropdownOptionsService.PopulateAsync(model);
-                model.SelectedCurrency = euro;
-                model.SelectedMetal = gold;
-
-                await SetUserPreferencesAsync(model);
-
-                var spotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{model.SelectedMetal}/{model.SelectedCurrency}");
-                model.SpotPrice = spotPrice;
-                model.GoldSpotPrice = spotPrice;
-
-                // Gold Euro price 
-                if (model.SelectedMetal != gold || model.SelectedCurrency != euro)
-                {
-                    var goldSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{gold}/{euro}");
-                    model.GoldSpotPrice = goldSpotPrice;
-                }
+                // Gold Euro price
+                var goldSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{gold}/{euro}");
+                model.GoldSpotPrice = goldSpotPrice;
 
                 // Silver Euro price 
                 const string silver = "XAG";
@@ -72,6 +59,20 @@ namespace Metal_Mate_MVC.Controllers
                 const string platinum = "XPT";
                 var platinumSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>($"price/{platinum}/{euro}");
                 model.PlatinumSpotPrice = platinumSpotPrice;
+
+                await _dropdownOptionsService.PopulateAsync(model);
+
+                model.SelectedCurrency = euro;
+                model.SelectedMetal = gold;
+                model.SelectedSpotPrice = goldSpotPrice;
+                await SetUserPreferencesAsync(model);
+
+                // If user has different favourites to the default values get the spot price for their selections.
+                if (model.SelectedMetal != gold || model.SelectedCurrency != euro)
+                {
+                    model.SelectedSpotPrice = await _apiService.GetAPIDataAsync<SpotPrice>(
+                        $"price/{model.SelectedMetal}/{model.SelectedCurrency}");
+                }
             }
             catch (Exception ex)
             {
@@ -130,7 +131,7 @@ namespace Metal_Mate_MVC.Controllers
             }
             catch (UserProfileErrorException ex)
             {
-                _logger.LogError(ex, "An error occurred while fetching the user profile.");
+                _logger.LogWarning(ex, "An error occurred while fetching the user profile.");
 
                 model.ErrorMessage =
                     "Apologies, your profile information is currently unavailable so your favourite selections cannot be defaulted. Please use the dropdowns above.";

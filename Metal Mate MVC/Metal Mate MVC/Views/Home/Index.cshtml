@@ -14,7 +14,7 @@
 
         <div class="row mt-3">
             <div class="col-12">
-                @if (Model?.SpotPrice != null)
+                @if (Model?.SelectedSpotPrice != null)
                 {
                     <!-- Heading Area -->
                     <header class="row">
@@ -99,33 +99,33 @@
                             <!-- Spot Price -->
                             <div class="spot-price-box">
                                 <div class="fw-bold">
-                                    @Html.DisplayNameFor(m => m.SpotPrice!.Price):
+                                    @Html.DisplayNameFor(m => m.SelectedSpotPrice!.Price):
                                 </div>
                                 <div>
                                     <span id="currencySymbol">
-                                        @Html.DisplayFor(m => m.SpotPrice!.CurrencySymbol)
+                                        @Html.DisplayFor(m => m.SelectedSpotPrice!.CurrencySymbol)
                                     </span>
                                     <span id="spotPrice">
-                                        @Html.DisplayFor(m => m.SpotPrice!.Price)
+                                        @Html.DisplayFor(m => m.SelectedSpotPrice!.Price)
                                     </span>
                                 </div>
                             </div>
                             <!-- Exchange Rate -->
                             <div class="spot-price-box">
                                 <div class="fw-bold">
-                                    @Html.DisplayNameFor(m => m.SpotPrice!.ExchangeRate):
+                                    @Html.DisplayNameFor(m => m.SelectedSpotPrice!.ExchangeRate):
                                 </div>
                                 <div id="exchangeRate">
-                                    @Html.DisplayFor(m => m.SpotPrice!.ExchangeRate)
+                                    @Html.DisplayFor(m => m.SelectedSpotPrice!.ExchangeRate)
                                 </div>
                             </div>
                             <!-- Updated At -->
                             <div class="spot-price-box">
                                 <div class="fw-bold">
-                                    @Html.DisplayNameFor(m => m.SpotPrice!.UpdatedAt):
+                                    @Html.DisplayNameFor(m => m.SelectedSpotPrice!.UpdatedAt):
                                 </div>
                                 <div id="updatedAt">
-                                    @Html.DisplayFor(m => m.SpotPrice!.UpdatedAt)
+                                    @Html.DisplayFor(m => m.SelectedSpotPrice!.UpdatedAt)
                                 </div>
                             </div>
                         </div>
