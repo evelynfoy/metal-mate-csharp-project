@@ -2,6 +2,7 @@
 using Metal_Mate_MVC.Models;
 using Metal_Mate_MVC.Models.ViewModels;
 using Metal_Mate_MVC.Services;
+using Metal_Mate_MVC.Tests.Unit.SetUp;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -26,38 +27,20 @@ namespace Metal_Mate_MVC.Tests
         // Constructor to set up the mocks and the controller
         public ProfileControllerTests()
         {
-            // Set up a mock user store for the UserManager
-            var store = new Mock<IUserStore<ApplicationUser>>();
-
             _loggerMock = new Mock<ILogger<ProfileController>>();
-            _userManagerMock = new Mock<UserManager<ApplicationUser>>(
-                               Mock.Of<IUserStore<ApplicationUser>>(), null, null, null, null, null, null, null, null);
+            _userManagerMock = SetUpMocks.CreateUserManagerMock();
             _dropdownOptionsServiceMock = new Mock<IDropdownOptionsService>();
 
-            // Set up a mock user for the controller context
-            var user = new ClaimsPrincipal(new ClaimsIdentity(
-            new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, "123"),
-                new Claim(ClaimTypes.Name, "Alice"),
-                new Claim(ClaimTypes.Role, "Admin")
-            },
-            authenticationType: "TestAuth"));
-
-            _controller = new ProfileController(
-                _loggerMock.Object,
-                _userManagerMock.Object,
-                _dropdownOptionsServiceMock.Object);
-
-            _controller.ControllerContext = new ControllerContext
-            { 
-                HttpContext = new DefaultHttpContext { User = user }
-            };
+            _controller = CreateProfileController(
+                            _loggerMock.Object,
+                            _userManagerMock.Object,
+                            _dropdownOptionsServiceMock.Object
+                            );
         }
 
-        // Mocked response - happy path
+        // Edit - Get - happy path - Displays authenticated user's profile and populates dropdowns for metals and currencies
         [Fact]
-        public async Task Edit_ReturnsAViewResult()
+        public async Task Edit_Get_ReturnsAViewResult()
         {
             // Arrange
             // Mock the user manager to return a valid application user when GetUserAsync is called. 
@@ -82,18 +65,22 @@ namespace Metal_Mate_MVC.Tests
             // Assert
             Assert.NotNull(result);
             var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.NotNull(viewResult.Model);
             var model = Assert.IsType<EditProfileViewModel>(viewResult.Model);
-            Assert.NotNull(model.FirstName);
+
             Assert.Equal("John", model.FirstName);
+            Assert.Equal("Doe", model.LastName);
+            Assert.Equal("XAU", model.FavouriteMetal);
+            Assert.Equal("USD", model.FavouriteCurrency);
 
             _dropdownOptionsServiceMock.Verify(
                 s => s.PopulateAsync(It.IsAny<EditProfileViewModel>()),
                 Times.Once);
         }
 
-        // Mocked response - Exception thrown from the service when calling the GetAPIDataAsync Method for metals
+        // Edit - Get - Exception thrown from the service when calling the GetAPIDataAsync Method for metals
         [Fact]
-        public async Task Edit_ReturnsAnErrorResult()
+        public async Task Edit_Get_ReturnsAnErrorResult()
         {
             // Arrange
             var model = new EditProfileViewModel();
@@ -106,13 +93,7 @@ namespace Metal_Mate_MVC.Tests
             // Mock the user manager to return a valid application user when GetUserAsync is called. 
             _userManagerMock
                 .Setup(s => s.GetUserAsync(It.IsAny<System.Security.Claims.ClaimsPrincipal>()))
-                .ReturnsAsync(new ApplicationUser
-                {
-                    FirstName = "John",
-                    LastName = "Doe",
-                    FavouriteMetal = "XAU",
-                    FavouriteCurrency = "USD"
-                });
+                .ReturnsAsync(SetUpTestDB.CreateUser(1));
 
             // Act
             var result = await _controller.Edit();
@@ -120,27 +101,27 @@ namespace Metal_Mate_MVC.Tests
             // Assert
             Assert.NotNull(result);
             var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.NotNull(viewResult.Model);
             model = Assert.IsType<EditProfileViewModel>(viewResult.Model);
 
-            Assert.NotNull(model.ErrorMessage);
             Assert.Equal("Your profile information is temporarily unavailable. Please try again later.", model.ErrorMessage);
+
+            _userManagerMock.Verify(
+               s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()),
+               Times.Once);
+
+            _dropdownOptionsServiceMock.Verify(
+                s => s.PopulateAsync(It.IsAny<EditProfileViewModel>()),
+                Times.Once);
 
         }
 
-        // Mocked response - Happy path for the Post Edit Method 
+        // Edit - Post - happy path - Sets success message in TempData and redirects to the Edit page
         [Fact]
         public async Task Edit_Post_ReturnsRedirectAndSetsTempData()
         {
             // Arrange
-            var testUser = new ApplicationUser
-            {
-                FirstName = "John",
-                LastName = "Doe",
-                FavouriteMetal = "XAU",
-                FavouriteCurrency = "USD",
-                UserName = "jdoe",
-                Id = "user-1"
-            };
+            var testUser = SetUpTestDB.CreateUser(1);
 
             // Mock for GetUserAsync to return the test user
             _userManagerMock
@@ -152,59 +133,30 @@ namespace Metal_Mate_MVC.Tests
                 .Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>()))
                 .ReturnsAsync(IdentityResult.Success);
 
-            var controller = new ProfileController(_loggerMock.Object, _userManagerMock.Object, _dropdownOptionsServiceMock.Object);
-
-            // Give controller a HttpContext with an authenticated user
-            var claims = new[] { new Claim(ClaimTypes.NameIdentifier, testUser.Id) };
-            var identity = new ClaimsIdentity(claims, "TestAuth");
-            var principal = new ClaimsPrincipal(identity);
-            var httpContext = new DefaultHttpContext { User = principal };
-
-            controller.ControllerContext = new ControllerContext
-            {
-                HttpContext = httpContext
-            };
-
             // Initialize TempData so TempData["Success"] won't be null
-            controller.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+            _controller.TempData = new TempDataDictionary(_controller.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
 
-            var model = new EditProfileViewModel
-            {
-                FirstName = "Jane",
-                LastName = "Doe",
-                FavouriteMetal = "XAG",
-                FavouriteCurrency = "USD",
-                Currencies = new List<SelectListItem> { new SelectListItem { Value = "USD", Text = "USD" } },
-                Metals = new List<SelectListItem> { new SelectListItem { Value = "XAU", Text = "Gold" } }
-            };
+            var model = new EditProfileViewModel();
 
             // Act
-            var result = await controller.Edit(model);
+            var result = await _controller.Edit(model);
 
             // Assert
             Assert.NotNull(result);
             var redirect = Assert.IsType<RedirectToActionResult>(result);
-            Assert.Equal(nameof(controller.Edit), redirect.ActionName);
+            Assert.Equal(nameof(_controller.Edit), redirect.ActionName);
 
             // TempData contains the success key
-            Assert.Equal("Profile updated successfully.", controller.TempData["Success"] as string);
+            Assert.Equal("Profile updated successfully.", _controller.TempData["Success"] as string);
         }
 
 
-        // Mocked response - Exception thrown when calling the UpdateAsync method of the UserManager in the Post Edit Method
+        // Edit - Post - Exception thrown when calling the UpdateAsync method of the UserManager
         [Fact]
         public async Task Edit_Post_ReturnsError()
         {
             // Arrange
-            var testUser = new ApplicationUser
-            {
-                FirstName = "John",
-                LastName = "Doe",
-                FavouriteMetal = "XAU",
-                FavouriteCurrency = "USD",
-                UserName = "jdoe",
-                Id = "user-1"
-            };
+            var testUser = SetUpTestDB.CreateUser(1);
 
             // Mock for GetUserAsync to return the test user
             _userManagerMock
@@ -216,16 +168,7 @@ namespace Metal_Mate_MVC.Tests
                 .Setup(m => m.UpdateAsync(It.IsAny<ApplicationUser>()))
                 .ThrowsAsync(new Exception("An error ocurred"));
 
-            // Prepare a model with changed data to simulate a user editing their profile
-            var model = new EditProfileViewModel
-            {
-                FirstName = "John",
-                LastName = "Doe",
-                FavouriteMetal = "XAU",
-                FavouriteCurrency = "USD",
-                Currencies = new List<SelectListItem> { new SelectListItem { Value = "USD", Text = "USD" } },
-                Metals = new List<SelectListItem> { new SelectListItem { Value = "XAU", Text = "Gold" } }
-            };
+            var model = new EditProfileViewModel();
 
             // Act
             var result = await _controller.Edit(model);
@@ -233,8 +176,58 @@ namespace Metal_Mate_MVC.Tests
             // Assert
             Assert.NotNull(result);
             var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.NotNull(viewResult.Model);
             model = Assert.IsType<EditProfileViewModel>(viewResult.Model);
+
             Assert.Equal("An error occurred while updating your profile. Please try again later.", model.ErrorMessage);
+
+            // TempData is empty
+            Assert.Null(_controller.TempData);
+
+            _userManagerMock.Verify(
+               s => s.GetUserAsync(It.IsAny<ClaimsPrincipal>()),
+               Times.Once);
+
+            _userManagerMock.Verify(
+               s => s.UpdateAsync(It.IsAny<ApplicationUser>()),
+               Times.Once);
+        }
+
+        //---------------------------------------------------------------------------------------------------------------
+        //---------------------------------------------------------------------------------------------------------------
+
+
+
+        private static ProfileController CreateProfileController(ILogger<ProfileController> logger,
+                                                                 UserManager<ApplicationUser> userManager,
+                                                                 IDropdownOptionsService dropdownOptionsService
+                                                                 )
+        {
+            var controller = new ProfileController(
+                            logger,
+                            userManager,
+                            dropdownOptionsService
+                            );
+
+            // Set up an authenticated user
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, "user1")
+            };
+
+            var identity = new ClaimsIdentity(
+                claims,
+                "TestAuthentication");
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(identity)
+                }
+            };
+
+            return controller;
         }
 
     }

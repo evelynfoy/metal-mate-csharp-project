@@ -10,7 +10,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
     {
 
         [Fact]
-        public async Task Edit_Get_Returns_Profile_For_Authenticated_User()
+        public async Task Edit_Get_ReturnsProfileForAuthenticated_User()
         {
             // Arrange
             // Setup the test server and create a test user
@@ -19,7 +19,6 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
 
             var userManager = scope.ServiceProvider
                 .GetRequiredService<UserManager<ApplicationUser>>();
-
 
             var user = new ApplicationUser
             {
@@ -32,7 +31,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
                 FavouriteMetal = "XAU"
             };
 
-            await userManager.CreateAsync(user, "Password123!");
+            var userCreated = await userManager.CreateAsync(user, "Password123!");
 
             var client = factory.CreateClient();
 
@@ -51,8 +50,15 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
             var html = await response.Content.ReadAsStringAsync(
                 TestContext.Current.CancellationToken);
 
+            // Verify that the user was created successfully
+            Assert.True(userCreated.Succeeded);
+
+            // Verify that the response contains the user's profile information
             Assert.Contains("John", html);
             Assert.Contains("Smith", html);
+
+            // Error is NOT displayed
+            Assert.DoesNotContain(html, "<div id=\"errorMessage\" class=\"alert alert-danger\">");
         }
 
         [Fact]
@@ -124,7 +130,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
         }
 
         [Fact]
-        public async Task Edit_Get_Redirects_Anonymous_User_To_Login()
+        public async Task Edit_Get_RedirectsAnonymousUserToLogin()
         {
             // Arrange
             using var factory = new CustomWebApplicationFactory();
