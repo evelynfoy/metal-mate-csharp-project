@@ -11,7 +11,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
         // Tests that the Index action of the HomeController correctly retrieves and displays
         // the authenticated user's favorite currency and metal in the dropdown selections.
         [Fact]
-        public async Task Index_Defaults_Dropdown_Selections_To_Authenticated_Users_Favourites()
+        public async Task Index_AuthenticatedUser_DefaultsDropdownSelections()
         {
             // Arrange
             // Setup the test server and create a test user
@@ -20,7 +20,6 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
 
             var userManager = scope.ServiceProvider
                 .GetRequiredService<UserManager<ApplicationUser>>();
-
 
             var user = new ApplicationUser
             {
@@ -62,7 +61,7 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
         // and metal selections when there is no authenticated user, ensuring that the application
         // behaves as expected in the absence of user-specific preferences.
         [Fact]
-        public async Task Index_Defaults_Dropdown_Selections_To_Standard_Defaults()
+        public async Task Index_AnonymousUser_DefaultsStandardDropdownSelections()
         {
             // Arrange
             // Setup the test server and create a test user
@@ -92,9 +91,9 @@ namespace Metal_Mate_MVC.Tests.Integration.Controllers
         }
 
         // Tests that the Index action of the HomeController returns a user friendly error message
-        // when the the Authenticated user doesn't exist in the databse.
+        // when the the Authenticated user doesn't exist in the database.
         [Fact]
-        public async Task Index_Error_User_Not_In_Database()
+        public async Task Index_Error_UserNotFound()
         {
             // Arrange
             // Setup the test server and create a test user

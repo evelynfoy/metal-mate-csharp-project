@@ -15,7 +15,7 @@ namespace Metal_Mate_MVC.Tests
     public class ApiServiceTests
     {
 
-        // Mocked response - happy path - Symbols
+        // Get - happy path - Symbols
         [Fact]
         public async Task GetAPIDataAsync_ValidResponse_ReturnsSymbols()
         {
@@ -65,7 +65,7 @@ namespace Metal_Mate_MVC.Tests
 
         }
 
-        // Mocked response - happy path - Spot Price
+        // Get - happy path - Spot Price
         [Fact]
         public async Task GetAPIDataAsync_ValidResponse_ReturnsSpotPrice()
         {
@@ -109,7 +109,7 @@ namespace Metal_Mate_MVC.Tests
 
         }
 
-        // Mocked response - StatusCode OK but null content returned
+        // Get - StatusCode OK but null content returned
         [Fact]
         public async Task GetAPIDataAsync_NullResponse_ThrowsException()
         {
@@ -142,9 +142,9 @@ namespace Metal_Mate_MVC.Tests
 
         }
 
-        // Mocked response - Invalid parameter passed to API, returns 404 Not Found
+        // Get - Invalid parameter passed to API, returns 404 Not Found
         [Fact]
-        public async Task GetAPIAsync_ClientError_ThrowsApiClientErrorException()
+        public async Task GetAPIDataAsync_ClientError_ThrowsApiClientErrorException()
         {
             // Arrange
             var handlerMock = new Mock<HttpMessageHandler>();
@@ -177,7 +177,7 @@ namespace Metal_Mate_MVC.Tests
            throwing a final exception. 
         */
         [Fact]
-        public async Task GetAPIAsync_NetworkError_ThrowsExceptionAfterThreeRetries()
+        public async Task GetAPIDataAsync_NetworkError_ThrowsExceptionAfterThreeRetries()
         {
             // Arrange
             var handlerMock = new Mock<HttpMessageHandler>();

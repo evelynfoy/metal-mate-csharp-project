@@ -10,7 +10,7 @@ namespace Metal_Mate_MVC.Models.ViewModels
         public SpotPrice? SilverSpotPrice { get; set; } = null;
         public SpotPrice? PlatinumSpotPrice { get; set; } = null;
 
-        public SpotPrice? SpotPrice { get; set; }
+        public SpotPrice? SelectedSpotPrice { get; set; } = null;
 
         [Display(Name = "Metal")]
         public string SelectedMetal { get; set; } = string.Empty;

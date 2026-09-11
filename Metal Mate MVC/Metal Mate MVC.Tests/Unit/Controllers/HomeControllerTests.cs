@@ -38,7 +38,7 @@ namespace Metal_Mate_MVC.Tests
                 _dropdownOptionsServiceMock.Object);
         }
 
-        // Mocked response - happy path with anonymous user
+        // Index - happy path - anonymous user - Displays spot prices for default values
         [Fact]
         public async Task Index_Anonymous_ReturnsAViewResult()
         {
@@ -73,13 +73,19 @@ namespace Metal_Mate_MVC.Tests
             var result = await _controller.Index();
 
             // Assert
+            // Confirm unauthenticated user
             Assert.False(_controller.User.Identity?.IsAuthenticated);
+
+            Assert.NotNull(result);
             var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.NotNull(viewResult.Model);
             var model = Assert.IsType<HomeViewModel>(viewResult.Model);
+
             Assert.Equal("XAU", model.SelectedMetal);
             Assert.Equal("EUR", model.SelectedCurrency);
-            Assert.NotNull(model.SpotPrice);
-            Assert.Equal("Gold", model.SpotPrice.Name);
+            Assert.NotNull(model.SelectedSpotPrice);
+            Assert.Equal("Gold", model.SelectedSpotPrice.Name);
+
             Assert.Empty(model.ErrorMessage);
 
             _dropdownOptionsServiceMock.Verify(
@@ -87,7 +93,7 @@ namespace Metal_Mate_MVC.Tests
                 Times.Once());
         }
 
-        // Mocked response - happy path with authenticated user
+        // Index - happy path - authenticated user - Displays spot prices and defaults user's favourite values
         [Fact]
         public async Task Index_Authenticated_ReturnsAViewResult()
         {
@@ -142,12 +148,18 @@ namespace Metal_Mate_MVC.Tests
             var result = await _controller.Index();
 
             // Assert
+            // Confirm user is authenticated
+            Assert.True(_controller.User.Identity?.IsAuthenticated);
+
+            Assert.NotNull(result);
             var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.NotNull(viewResult.Model);   
             var model = Assert.IsType<HomeViewModel>(viewResult.Model);
+
             Assert.Equal("XAG", model.SelectedMetal);
             Assert.Equal("USD", model.SelectedCurrency);
-            Assert.NotNull(model.SpotPrice);
-            Assert.Equal("Silver", model.SpotPrice.Name);
+            Assert.NotNull(model.SelectedSpotPrice);
+            Assert.Equal("Silver", model.SelectedSpotPrice.Name);
             Assert.Empty(model.ErrorMessage);
 
             _dropdownOptionsServiceMock.Verify(
@@ -155,9 +167,9 @@ namespace Metal_Mate_MVC.Tests
                 Times.Once);
         }
 
-        // Mocked response - Exception thrown while fetching the user profile for an authenticated user
+        // Index - Exception - Failed to retrieve the user profile - reverts to standard defaults, displays message 
         [Fact]
-        public async Task Index_Authenticated_ReturnsAViewResultAndException()
+        public async Task Index_Exception_ReturnsAViewResultAndException()
         {
             // Arrange
             // Mock the Dropdown Options service to complete successfully
@@ -204,12 +216,16 @@ namespace Metal_Mate_MVC.Tests
             var result = await _controller.Index();
 
             // Assert
+            Assert.NotNull(result);
             var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.NotNull(viewResult.Model);
             var model = Assert.IsType<HomeViewModel>(viewResult.Model);
+
+            // Confirm standard defaults displayed
             Assert.Equal("XAU", model.SelectedMetal);
             Assert.Equal("EUR", model.SelectedCurrency);
-            Assert.NotNull(model.SpotPrice);
-            Assert.Equal("Gold", model.SpotPrice.Name);
+            Assert.NotNull(model.SelectedSpotPrice);
+            Assert.Equal("Gold", model.SelectedSpotPrice.Name);
 
             Assert.Equal("Apologies, your profile information is currently unavailable so your favourite selections cannot be defaulted. " +
                 "Please use the dropdowns above.", model.ErrorMessage);
@@ -219,9 +235,9 @@ namespace Metal_Mate_MVC.Tests
                 Times.Once);
         }
 
-        // Mocked response - Exception thrown from the API service while retrieving the SpotPrice 
+        // Index - Exception - Failed to retrieve spot price - Displays error message
         [Fact]
-        public async Task Index_ReturnsAnErrorResult()
+        public async Task Index_Exception_ReturnsAnErrorMessage()
         {
             // Arrange
 
@@ -230,27 +246,19 @@ namespace Metal_Mate_MVC.Tests
                 .Setup(s => s.GetAPIDataAsync<SpotPrice>("price/XAU/EUR"))
                 .ThrowsAsync(new Exception("An error ocurred"));
 
-            // Mock the Dropdown Options service to return a successful run
-            _dropdownOptionsServiceMock
-                .Setup(s => s.PopulateAsync(It.IsAny<AlertRequestViewModel>()))
-                .Returns(Task.CompletedTask);
-
             // Act
             var result = await _controller.Index();
 
             // Assert
+            Assert.NotNull(result);
             var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.NotNull(viewResult);
             var model = Assert.IsType<HomeViewModel>(viewResult.Model);
 
-            Assert.Null(model.SpotPrice);
             Assert.Equal("The price site is unavailable at the moment. Please try again later.", model.ErrorMessage);
-
-            _dropdownOptionsServiceMock.Verify(
-                s => s.PopulateAsync(It.IsAny<HomeViewModel>()),
-                Times.Once);
         }
 
-        // Mocked response - Happy path for the GetSpotPriceAsync Method 
+        // Index - happy path - GetSpotPriceAsync Method - Returns SpotPriceResponse DTO
         [Fact]
         public async Task GetSpotPriceAsync_ReturnsOkWithSpotPrice()
         {
@@ -281,9 +289,9 @@ namespace Metal_Mate_MVC.Tests
             Assert.Equal("€", response.CurrencySymbol);
         }
 
-        // Mocked response - Exception thrown from the service while calling the GetSpotPriceAsync Method       
+        // Index - Exception - GetSpotPriceAsync Method - Returns error message    
         [Fact]
-        public async Task GetSpotPriceAsync_ReturnsInternalServerError()
+        public async Task GetSpotPriceAsync_ReturnsAnErrorMessage()
         {
             // Arrange
 
