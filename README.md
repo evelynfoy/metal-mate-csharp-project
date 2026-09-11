@@ -216,34 +216,17 @@ The application uses responsive styling to provide a usable experience across a 
 The database connection string need to be configured through local configuration.
 Also the base address of the API.
 
-Secrets are not stored in the repository but the appsetting.json file should look like this.
-```text
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=xxxxx;Trusted_Connection=True;MultipleActiveResultSets=true"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  },
-  "AllowedHosts": "*",
-  "HttpClients": {
-    "GoldApi": {
-      "BaseAddress": "https://api.gold-api.com/"
-    }
-  }
-}
-```
+This configuration is provided on the repository in appsettings.json as it does not store 
+any secrets just the database name.
 
 ### Running
 
-1. Clone the repository.
-2. Configure the required application settings.
-3. Create/update the database using Entity Framework Core migrations.
-4. Build and run the application from Visual Studio.
-5. Run the test suite using Test Explorer.
+1. Clone the repository - <code>git clone https://github.com/evelynfoy/metal-mate.git</code>
+2. Connect to the project folder. <code>cd Metal Mate MVC</code> 
+3. Run <code>dotnet restore</code>. This will install the dependancies.
+4. Run <code>dotnet ef database update</code> This will create the database and run migrations.
+5. Run <code>dotnet run</code> or press F5 to run through Visual Studio.
+6. Run all tests from the Test menu or from the Test Explorer also on that menu.
 
 ## Future Development
 
